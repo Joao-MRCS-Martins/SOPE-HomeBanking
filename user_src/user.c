@@ -8,84 +8,82 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <pthread.h>
+
+pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main(int argc, char *argv[]) {
+    
+    if(argc != 6) {
+        //show_usage();
+        printf("Wrong arguments\n");
+        return RC_LOGIN_FAIL;
+    }
+
+    //open log file
+
+    //parsing input
+
     //send request
-    int fd, opcode;
-    char name[MAX_PASSWORD_LEN];
+    int rq, opcode;
     char request[MAX_PASSWORD_LEN+WIDTH_ID+1];
     //receive answer from server
-    int fd2, fd2_dummy;
+    int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     char response [MAX_PASSWORD_LEN];
     int pid = getpid();
-    
-    if (argc!=2 && argc!=3) {
-        printf("Usage: user <opcode> <username> OR user 0\n");
-        exit(1);
-    }
-
-    printf("user checkpoint 1\n");
-
-    fd=open(SERVER_FIFO_PATH,O_WRONLY);
-    if (fd == -1) {
-        return RC_SRV_DOWN;
-    }
-
-    write(fd,&pid,sizeof(int));
-
-    printf("user checkpoint 2\n");
+    time_t begin;
     
     sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,pid);
-    if (mkfifo(fifo_path,RDWR_USGR)<0)
+    if (mkfifo(fifo_path,RDWR_USGR)<0) {
         if (errno==EEXIST) {
+            //return RC_OTHER;
+        }
+        else {
             perror(fifo_path);
             return RC_OTHER;
         }
-        else {
-            return RC_OTHER;
-        } 
+    }
+
+    rq=open(SERVER_FIFO_PATH,O_WRONLY);
+    if (rq == -1) {
+        return RC_USR_DOWN;
+    }
+
+    write(rq,&pid,sizeof(int));
+
+    if ((rs=open(fifo_path,O_RDONLY)) == -1) {
+        return RC_USR_DOWN;
+    }
+
+    //parse request
+    opcode = atoi(argv[1]);
+    write(rq,&opcode,sizeof(int));
     
-    printf("user checkpoint 3\n");
-
-    if ((fd2=open(fifo_path,O_RDONLY)) == -1) {
-        return RC_USR_DOWN;
-    }
-    if ((fd2_dummy=open(fifo_path,O_WRONLY)) ==-1) {
-        return RC_USR_DOWN;
-    }
-
-    printf("user checkpoint 4\n");
-
-    opcode=atoi(argv[1]);
-    write(fd,&opcode,sizeof(int));
-    if (opcode!=0) {
-        write(fd,argv[2],strlen(argv[2])+1);
+    bool timeout = true;
+    if(opcode !=0) {
+        time(&begin);
+        while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
+            if(read(rs,response,sizeof(response)) > 0) {
+                printf("%s\n",response);
+                timeout = false;
+                break;
+            }
+        }
     }
 
-    while(opcode !=0) {
-        read(STDIN_FILENO,request, sizeof(request));
-        opcode = atoi(strtok(request," "));
-        write(fd,&opcode,sizeof(int));
-        if(opcode == 0)
-            break;
-        strcat(name,strtok(NULL,""));
-        write(fd,name,sizeof(name));
-        read(fd2,response,sizeof(response));
-        printf("%s\n",response);
-        
-    }
-
-    printf("user checkpoint 5\n");
-    close(fd2);
-    close(fd2_dummy);
+    close(rq);
+    close(rs);
     if(unlink(fifo_path) < 0) {
         printf("Error when destroying FIFO '%s'\n",fifo_path);
         return RC_OTHER;
     }
     else
         printf("FIFO '%s' has been destroyed\n",fifo_path);
-    close(fd);
-    return RC_OK;
+
+    if(timeout && opcode != 0)
+        return RC_SRV_TIMEOUT;
+    else
+        return RC_OK;
 }
