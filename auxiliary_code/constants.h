@@ -32,3 +32,6 @@
 #define USER_FIFO_PATH_LEN (sizeof(USER_FIFO_PATH_PREFIX) + WIDTH_ID + 1)
 
 #define FIFO_TIMEOUT_SECS 30
+
+#define RDWR_USGR 0660
+#define READ_ALL 0444
