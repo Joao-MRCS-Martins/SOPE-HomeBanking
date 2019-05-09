@@ -1,8 +1,6 @@
-# Ignore binary files
-*
-!*.*
-!*/
-.*
+*.vscode
+
+*.depend
 # Prerequisites
 *.d
 
@@ -20,7 +18,6 @@
 # Precompiled Headers
 *.gch
 *.pch
-*.ipch
 
 # Libraries
 *.lib
