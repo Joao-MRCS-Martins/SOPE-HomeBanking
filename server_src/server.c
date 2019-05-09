@@ -10,6 +10,28 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <pthread.h>
+#include "logging_server.h"
+#include "logging_user.h"
+
+struct bank_account admin;
+
+void log_server(){
+    char* password = malloc(20);
+
+    strcpy(password, "password123");
+
+    open_server(password, 4);
+
+    if(checkPassword(password)){
+        printf("tacerto\n");
+    }
+
+    if(checkPassword("bananana")){
+        printf("ta mal\n");
+    }
+
+    close_server(4);
+}
 
 int main (int argc, char *argv []) {
 
@@ -28,6 +50,18 @@ int main (int argc, char *argv []) {
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
         return rc;
     }
+
+    //recieve user requests
+    int fd, fd_dummy;
+    char name [MAX_PASSWORD_LEN];
+    int pid;
+    int opcode;
+    //send server responses
+    int fd2;
+    char fifo_path [USER_FIFO_PATH_LEN];
+    char response[MAX_PASSWORD_LEN];
+
+    log_server();
     
     //create threads
 
