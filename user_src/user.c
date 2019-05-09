@@ -1,4 +1,4 @@
-#include "../auxiliary_code/sope.h"
+#include "user_parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,9 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <pthread.h>
 
-pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main(int argc, char *argv[]) {
@@ -23,15 +21,19 @@ int main(int argc, char *argv[]) {
 
     //open log file
 
-    //parsing input
-
-    //send request
-    int rq, opcode;
-    char request[MAX_PASSWORD_LEN+WIDTH_ID+1];
+    //parsing request
+    int rq;
+    tlv_request_t request;
+    int rc;
+    if ((rc = input_parser(argv,&request))  > 0) {
+        return rc;
+    }
+    
+   
     //receive answer from server
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
-    char response [MAX_PASSWORD_LEN];
+    char response [MAX_BUFFER];
     int pid = getpid();
     time_t begin;
     
@@ -51,25 +53,19 @@ int main(int argc, char *argv[]) {
         return RC_USR_DOWN;
     }
 
-    write(rq,&pid,sizeof(int));
+    write(rq,&request,sizeof(request));
 
     if ((rs=open(fifo_path,O_RDONLY)) == -1) {
         return RC_USR_DOWN;
     }
-
-    //parse request
-    opcode = atoi(argv[1]);
-    write(rq,&opcode,sizeof(int));
     
     bool timeout = true;
-    if(opcode !=0) {
-        time(&begin);
-        while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
-            if(read(rs,response,sizeof(response)) > 0) {
-                printf("%s\n",response);
-                timeout = false;
-                break;
-            }
+    time(&begin);
+    while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
+        if(read(rs,response,sizeof(response)) > 0) {
+            printf("%s\n",response);
+            timeout = false;
+            break;
         }
     }
 
@@ -82,7 +78,7 @@ int main(int argc, char *argv[]) {
     else
         printf("FIFO '%s' has been destroyed\n",fifo_path);
 
-    if(timeout && opcode != 0)
+    if(timeout)
         return RC_SRV_TIMEOUT;
     else
         return RC_OK;

@@ -58,12 +58,11 @@ int handle_requests() {
 
     //receive user requests
     int rq;
-    int pid;
-    int opcode;
+    tlv_request_t request;
     //send server responses
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
-    char response[MAX_PASSWORD_LEN];
+    char response[MAX_BUFFER];
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
         return RC_SRV_DOWN;
@@ -71,28 +70,23 @@ int handle_requests() {
     
     do
     {
-        if(read(rq, &pid, sizeof(int)) == 0) {
+        if(read(rq, &request, sizeof(request)) == 0) {
             usleep(500);
             continue;
         }
-        if(pid == 0) {
-            continue;
-        }
         //read pid of user and open fifo for comunication
-        sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,pid);
+        sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
         rs = open(fifo_path,O_WRONLY);
         if(rs == -1) {
             return RC_USR_DOWN;
         }
-        
-        read(rq, &opcode, sizeof(int));
-        if(opcode != 0) {
-            printf("User %d has opcode %d\n",pid,opcode);
-            sprintf(response,"User nº%d is gay",pid);
-            write(rs,response,sizeof(response));
-        }
+
+        printf("User %d has opcode %d\n",request.value.header.pid,request.type);
+        sprintf(response,"User nº%d has a weak pass: %s",request.value.header.pid,request.value.header.password);
+        write(rs,response,sizeof(response));
+
         close(rs);
-    } while (opcode != 0);
+    } while (request.type != OP_SHUTDOWN);
 
     close(rq);
     return RC_OK;

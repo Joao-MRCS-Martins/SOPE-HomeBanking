@@ -35,3 +35,4 @@
 
 #define RDWR_USGR 0660
 #define READ_ALL 0444
+#define MAX_BUFFER 256
