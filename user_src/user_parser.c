@@ -48,7 +48,7 @@ int fill_header(char* args[],req_header_t *header) {
         return RC_LOGIN_FAIL;
     }
 
-    if(strcmp(strtok(args[2],""),args[2]) != 0) {
+    if(strcmp(strtok(args[2]," "),args[2]) != 0) {
         printf("Password can't contain spaces.\n");
         return RC_LOGIN_FAIL;
     }
@@ -97,8 +97,8 @@ int fill_value(char* args,req_value_t *value, op_type_t type) {
         value->create.balance = quantity;
 
         sprintf(value->create.password,strtok(NULL," "));
-        if(strcmp(value->create.password,"") == 0) {
-            printf("A password must be associated to an account\n");
+        if(strlen(value->header.password) < MIN_PASSWORD_LEN || strlen(value->header.password) > MAX_PASSWORD_LEN) {
+            printf("Password must be between 8 and 20 characters long.\n");
             return RC_OP_NALLOW;
         }
 

@@ -1,4 +1,5 @@
 #include "server.h"
+#include "server_parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,9 +11,6 @@
 #include <string.h>
 #include <pthread.h>
 
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
-
 int main (int argc, char *argv []) {
 
     if(argc != 3) {
@@ -23,11 +21,15 @@ int main (int argc, char *argv []) {
 
     //open log file
 
-    //parsing input
-
+    //parse input and create admin bank account
+    int nthr;
+    bank_account_t admin;
+    int rc;
+    if((rc = input_parser(argv,&admin,&nthr)) > 0) {
+        return rc;
+    }
+    
     //create threads
-
-    //create admin account with password
 
     //logBankOfficeOpen
 
@@ -42,7 +44,7 @@ int main (int argc, char *argv []) {
             return RC_OTHER;
     }
 
-    int rc = handle_requests();
+    rc = handle_requests();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
         printf("Error when destroying FIFO '%s'\n",SERVER_FIFO_PATH);
