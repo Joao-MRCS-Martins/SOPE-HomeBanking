@@ -1,5 +1,3 @@
-#include "server.h"
-#include "server_parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,6 +8,13 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <pthread.h>
+
+#include "server_parser.h"
+#include "process_request.h"
+
+static bank_account_t admin;
+
+int receive_requests();
 
 int main (int argc, char *argv []) {
 
@@ -23,11 +28,13 @@ int main (int argc, char *argv []) {
 
     //parse input and create admin bank account
     int nthr;
-    bank_account_t admin;
     int rc;
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
         return rc;
     }
+
+    //load admin into bank accounts
+    load_admin(&admin);
     
     //create threads
 
@@ -44,7 +51,7 @@ int main (int argc, char *argv []) {
             return RC_OTHER;
     }
 
-    rc = handle_requests();
+    rc = receive_requests();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
         printf("Error when destroying FIFO '%s'\n",SERVER_FIFO_PATH);
@@ -56,7 +63,7 @@ int main (int argc, char *argv []) {
     return rc;
 }
 
-int handle_requests() {
+int receive_requests() {
 
     //receive user requests
     int rq;
@@ -64,6 +71,7 @@ int handle_requests() {
     //send server responses
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
+    //tlv_reply_t reply;
     char response[MAX_BUFFER];
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
@@ -84,6 +92,7 @@ int handle_requests() {
         }
 
         printf("User %d has opcode %d\n",request.value.header.pid,request.type);
+       
         sprintf(response,"User nº%d has a weak pass: %s",request.value.header.pid,request.value.header.password);
         write(rs,response,sizeof(response));
 

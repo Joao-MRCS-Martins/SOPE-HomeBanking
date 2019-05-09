@@ -1,1 +1,0 @@
-int handle_requests();
