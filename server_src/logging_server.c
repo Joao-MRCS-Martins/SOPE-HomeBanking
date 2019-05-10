@@ -1,15 +1,15 @@
 #include "logging_server.h"
 
-extern struct bank_account admin;
-
-//apos parsing
 void open_server(char * password, int bank_id){
     admin.account_id = ADMIN_ACCOUNT_ID;
     admin.balance = 0;
     strcpy(admin.salt, generateSALT());
+    printf("salt: %s\n", admin.salt);
     strcpy(admin.hash, generateHASH(admin.salt, password));
+    printf("hash: %s\n", admin.hash);
 
-    int fd = fopen(SERVER_LOGFILE, "w");
+    FILE* f = fopen(SERVER_LOGFILE, "w");
+    int fd = fileno(f);
     pthread_t tid = pthread_self();
 
     logBankOfficeOpen(fd, bank_id, tid);
@@ -18,7 +18,8 @@ void open_server(char * password, int bank_id){
 }
 
 void close_server(int bank_id){
-    int fd = fopen(SERVER_LOGFILE, "a");
+    FILE* f = fopen(SERVER_LOGFILE, "a");
+    int fd = fileno(f);
     pthread_t tid = pthread_self();
 
     logBankOfficeClose(fd, bank_id, tid);
@@ -27,10 +28,14 @@ void close_server(int bank_id){
 }
 
 char* generateSALT(){
+    char hexadecimals[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
     char * salt = malloc (SALT_LEN + 1);
-    long int max = pow(64*8,2);
+    char c;
 
-    sprintf(salt, "%X", rand() % max);
+    for(int i = 0; i < HASH_LEN; i++){
+        c = hexadecimals[rand() % 16];
+        salt[i] = c;
+    }
 
     return salt;
 }
@@ -39,8 +44,10 @@ char* generateHASH(char * salt, char * password){
     char * concatenation = malloc(sizeof(salt) + sizeof(password));
     char * result = malloc(HASH_LEN + 1);
 
-    strcat(concatenation, password);
-    strcpy(concatenation, salt);
+    strcpy(concatenation, password);
+    strcat(concatenation, salt);
+
+    printf("%s\n", concatenation);
 
     int pipe_des[2];
 
@@ -92,6 +99,8 @@ char* generateHASH(char * salt, char * password){
 bool checkPassword(char * password){
     char * result = generateHASH(admin.salt, password);
 
+        printf("result: %s\n", result);
+
     for(int i = 0; i < HASH_LEN; i++){
         if(result[i] != admin.hash[i]){
             return false;
@@ -99,4 +108,18 @@ bool checkPassword(char * password){
     }
 
     return true;
+}
+
+void log_reply(tlv_reply_t *reply, int bank_id){
+    FILE * f = fopen(USER_LOGFILE, "a");
+    int fd = fileno(f);
+
+    logReply(fd, bank_id, reply);
+}
+
+void log_request(tlv_request_t *request, int bank_id){
+    FILE * f = fopen(USER_LOGFILE, "a");
+    int fd = fileno(f);
+
+    logRequest(fd, bank_id, request);
 }

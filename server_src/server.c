@@ -1,21 +1,8 @@
 #include "server.h"
-#include "server_parser.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <signal.h>
-#include <sys/file.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <pthread.h>
-#include "logging_server.h"
-#include "logging_user.h"
 
 struct bank_account admin;
 
-void log_server(){
+void log_test(){
     char* password = malloc(20);
 
     strcpy(password, "password123");
@@ -26,7 +13,9 @@ void log_server(){
         printf("tacerto\n");
     }
 
-    if(checkPassword("bananana")){
+        printf("piça\n");
+
+    if(!checkPassword("bananana")){
         printf("ta mal\n");
     }
 
@@ -51,17 +40,17 @@ int main (int argc, char *argv []) {
         return rc;
     }
 
-    //recieve user requests
-    int fd, fd_dummy;
-    char name [MAX_PASSWORD_LEN];
-    int pid;
-    int opcode;
-    //send server responses
-    int fd2;
-    char fifo_path [USER_FIFO_PATH_LEN];
-    char response[MAX_PASSWORD_LEN];
+    // //recieve user requests
+    // int fd, fd_dummy;
+    // char name [MAX_PASSWORD_LEN];
+    // int pid;
+    // int opcode;
+    // //send server responses
+    // int fd2;
+    // char fifo_path [USER_FIFO_PATH_LEN];
+    // char response[MAX_PASSWORD_LEN];
 
-    log_server();
+    log_test();
     
     //create threads
 
