@@ -7,24 +7,11 @@ static bank_account_t admin;
 
 int receive_requests();
 
-void log_test(){
-    char* password = malloc(20);
-
-    strcpy(password, "password123");
-
-    open_server(password, 4);
-
-    if(checkPassword(password)){
-        printf("tacerto\n");
-    }
-
-        printf("piça\n");
-
-    if(!checkPassword("bananana")){
-        printf("ta mal\n");
-    }
-
-    close_server(4);
+void create_AdminAccount(char* password){
+    admin.account_id = ADMIN_ACCOUNT_ID;
+    admin.balance = 0;
+    strcpy(admin.salt, generateSALT());
+    strcpy(admin.hash, generateHASH(admin.salt, password));
 }
 
 int main (int argc, char *argv []) {
@@ -35,9 +22,10 @@ int main (int argc, char *argv []) {
         return RC_LOGIN_FAIL;
     }
 
-    //open log file
-
     //parse input and create admin bank account
+    create_AdminAccount(argv[2]);
+
+
     int nthr;
     int rc;
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
@@ -54,13 +42,13 @@ int main (int argc, char *argv []) {
     // char fifo_path [USER_FIFO_PATH_LEN];
     // char response[MAX_PASSWORD_LEN];
 
-    log_test();
     //load admin into bank accounts
     load_admin(&admin);
     
     //create threads
 
     //logBankOfficeOpen
+    open_server(ADMIN_ACCOUNT_ID);
 
     //logAccountCreation
 
@@ -82,6 +70,8 @@ int main (int argc, char *argv []) {
     else
         printf("FIFO '%s' has been destroyed\n",SERVER_FIFO_PATH);
     
+    close_server(ADMIN_ACCOUNT_ID);
+
     return rc;
 }
 
@@ -122,5 +112,6 @@ int receive_requests() {
     } while (request.type != OP_SHUTDOWN);
 
     close(rq);
+    
     return RC_OK;
 }
