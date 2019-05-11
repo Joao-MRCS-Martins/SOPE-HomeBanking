@@ -10,7 +10,7 @@ DEPFILE=.depend
 DEPTEXT='\#MAKE .DEPEND FILE'
 
 #Defining sources and objects
-SRCS=../auxiliary_code/log.c $(wildcard *.c)
+SRCS=../auxiliary_code/log.c ../auxiliary_code/show_info.c $(wildcard *.c)
 OBJS=$(subst .c,.o,$(SRCS))
 
 all: main

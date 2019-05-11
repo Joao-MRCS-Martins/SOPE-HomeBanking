@@ -1,4 +1,3 @@
-#include "user_parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,28 +8,29 @@
 #include <sys/stat.h>
 #include <string.h>
 
-
+#include "user_parser.h"
+#include "../auxiliary_code/show_info.h"
 
 int main(int argc, char *argv[]) {
     
     if(argc != 6) {
-        //show_usage();
-        printf("Wrong arguments\n");
+        printf("Wrong number of arguments.\n");
+        show_usage_user();
         return RC_LOGIN_FAIL;
     }
 
-    //open log file
+    //open log file(MISSING)
 
     //parsing request
     int rq;
     tlv_request_t request;
     int rc;
     if ((rc = input_parser(argv,&request))  > 0) {
+        show_usage_user();
         return rc;
     }
     
-   
-    //receive answer from server
+    //receive answer from server(HALFWAY)
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     char response [MAX_BUFFER];

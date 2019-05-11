@@ -28,6 +28,6 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
     admin->balance = 0;
     strcpy(admin->salt, generateSALT());
     strcpy(admin->hash, generateHASH(admin->salt, pass));
-
+    
     return RC_OK;
 }

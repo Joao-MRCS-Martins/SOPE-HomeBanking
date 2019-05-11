@@ -21,11 +21,15 @@ int input_parser(char* args[],tlv_request_t *req) {
             return rc;
         }
     }
-    else {
+    else if (type == OP_BALANCE || type == OP_SHUTDOWN) {
         if(strcmp(args[5],"") != 0) {
             printf("This operation takes no arguments.\n");
             return RC_OP_NALLOW;
         }
+    }
+    else {
+        printf("Invalid operation request.\n");
+        return RC_OP_NALLOW;
     }
 
     req->type = type;
