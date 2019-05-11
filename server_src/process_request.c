@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "process_request.h"
-#include "authentication.h"
 /*
 shared memory block
 array of bank accounts
@@ -18,20 +14,56 @@ void load_admin(bank_account_t *admin) {
 int process_request(tlv_request_t *request, tlv_reply_t *reply) {
     switch(request->type) {
         case OP_CREATE_ACCOUNT:
-            //validate admin
-            //create account
+            reply->type = request->type;
+            reply->value.header.account_id = request->value.header.account_id;
+
+            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                log_request(request, request->value.header.account_id);
+
+                bank_account_t account;
+                account.account_id = request->value.create.account_id;
+                account.balance = request->value.create.balance;
+                strcpy(account.salt, generateSALT());
+                strcpy(account.hash, generateHASH(account.salt, request->value.create.password));
+                
+                accounts[account.account_id] = &account;
+
+                reply->value.header.ret_code = RC_OK;
+            }
+            else
+            {
+                reply->value.header.ret_code = RC_LOGIN_FAIL;
+            }
+
+            log_reply(reply, request->value.header.account_id);
+
             break;
         case OP_SHUTDOWN:
-            //validate admin
-            //shutdown server
+            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                
+            }
+            else
+            {
+                
+            }
             break;
         case OP_BALANCE:
-            //validate client
-            //check account balance
+            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                
+            }
+            else
+            {
+                
+            }
             break;
         case OP_TRANSFER:
-            //validate client
-            //make transfer
+            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                            //make transfer
+            }
+            else
+            {
+                
+            }
             break;
         default:
             //do nothing

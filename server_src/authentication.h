@@ -4,4 +4,4 @@
 
 char* generateSALT();
 char* generateHASH(char * salt, char * password);
-bool checkPassword(char* salt, char* hash, char * password);
+bool checkPassword(bank_account_t *bank_account, char * password);

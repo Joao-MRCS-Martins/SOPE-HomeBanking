@@ -1,4 +1,9 @@
 #include "../auxiliary_code/sope.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "authentication.h"
+#include "logging_server.h"
 
 void load_admin(bank_account_t* admin);
 

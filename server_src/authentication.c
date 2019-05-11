@@ -69,13 +69,11 @@ char* generateHASH(char * salt, char * password){
     return result;
 }
 
-bool checkPassword(char* salt, char* hash, char * password){
-    char * result = generateHASH(salt, password);
-
-        printf("result: %s\n", result);
+bool checkPassword(bank_account_t *bank_account, char * password){
+    char * result = generateHASH(bank_account->salt, password);
 
     for(int i = 0; i < HASH_LEN; i++){
-        if(result[i] != hash[i]){
+        if(result[i] != bank_account->hash[i]){
             return false;
         }
     }
