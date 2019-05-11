@@ -20,7 +20,7 @@ char* generateHASH(char * salt, char * password){
     strcpy(concatenation, password);
     strcat(concatenation, salt);
 
-    printf("%s\n", concatenation);
+    //printf("%s\n", concatenation);
 
     int pipe_des[2];
 
@@ -72,11 +72,5 @@ char* generateHASH(char * salt, char * password){
 bool checkPassword(bank_account_t *bank_account, char * password){
     char * result = generateHASH(bank_account->salt, password);
 
-    for(int i = 0; i < HASH_LEN; i++){
-        if(result[i] != bank_account->hash[i]){
-            return false;
-        }
-    }
-
-    return true;
+    return (strcmp(result,bank_account->hash) == 0);
 }

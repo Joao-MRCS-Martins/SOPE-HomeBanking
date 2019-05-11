@@ -65,8 +65,7 @@ int receive_requests() {
     //send server responses (HALFWAY)
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
-    //tlv_reply_t reply;
-    char response[MAX_BUFFER];
+    tlv_reply_t reply;
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
         return RC_SRV_DOWN;
@@ -79,7 +78,6 @@ int receive_requests() {
             continue;
         }
 
-        show_request(request);
         //read pid of user and open fifo for comunication
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
         rs = open(fifo_path,O_WRONLY);
@@ -87,13 +85,12 @@ int receive_requests() {
             return RC_USR_DOWN;
         }
 
-        printf("User %d has opcode %d\n",request.value.header.pid,request.type);
-       
-        sprintf(response,"User nº%d has a weak pass: %s",request.value.header.pid,request.value.header.password);
-        write(rs,response,sizeof(response));
+        process_request(&request,&reply);
+        
+        write(rs,&reply,sizeof(reply));
 
         close(rs);
-    } while (request.type != OP_SHUTDOWN);
+    } while (request.type != OP_SHUTDOWN); //needs to check for valid request
 
     close(rq);
     

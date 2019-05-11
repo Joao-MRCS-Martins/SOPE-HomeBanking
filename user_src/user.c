@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
     //receive answer from server(HALFWAY)
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
-    char response [MAX_BUFFER];
-    //tlv_reply_t reply;
+    //char response [MAX_BUFFER];
+    tlv_reply_t reply;
     int pid = getpid();
     time_t begin;
     
@@ -63,8 +63,8 @@ int main(int argc, char *argv[]) {
     bool timeout = true;
     time(&begin);
     while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
-        if(read(rs,response,sizeof(response)) > 0) {
-            printf("%s\n",response);
+        if(read(rs,&reply,sizeof(reply)) > 0) {
+            show_reply(reply);
             timeout = false;
             break;
         }

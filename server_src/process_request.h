@@ -8,3 +8,5 @@
 void load_admin(bank_account_t* admin);
 
 int process_request(tlv_request_t *request, tlv_reply_t *reply);
+
+int create_account(tlv_request_t *req);

@@ -123,3 +123,11 @@ void show_reply(tlv_reply_t rep) {
         break;
     }
 }
+
+void show_account(bank_account_t account) {
+    printf("Account details:\n");
+    printf("Account id: %d\n",account.account_id);
+    printf("Account hash: %s\n",account.hash);
+    printf("Account salt: %s\n",account.salt);
+    printf("Account balance: %d\n",account.balance);
+}
