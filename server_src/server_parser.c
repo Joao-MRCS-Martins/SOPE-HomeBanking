@@ -24,11 +24,10 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
         return RC_OP_NALLOW;
     }
 
-    //generate hash with salt for admin pass
-
     admin->account_id = ADMIN_ACCOUNT_ID;
     admin->balance = 0;
     strcpy(admin->salt, generateSALT());
     strcpy(admin->hash, generateHASH(admin->salt, pass));
+    
     return RC_OK;
 }

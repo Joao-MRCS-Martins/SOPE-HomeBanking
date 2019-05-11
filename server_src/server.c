@@ -1,18 +1,17 @@
 #include "server.h"
-
 #include "server_parser.h"
 #include "process_request.h"
+#include "../auxiliary_code/show_info.h"
 
 static bank_account_t admin;
 
 int receive_requests();
 
-
 int main (int argc, char *argv []) {
 
     if(argc != 3) {
-        printf("Wrong arguments\n");
-        //show_usage():
+        printf("Wrong number of arguments.\n");
+        show_usage_server();
         return RC_LOGIN_FAIL;
     }
 
@@ -20,20 +19,20 @@ int main (int argc, char *argv []) {
     int nthr;
     int rc;
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
+        show_usage_server();
         return rc;
     }
 
-    printf("Parsing input\n");
+    //log admin account creation (MISSING)
 
     //load admin into bank accounts
     load_admin(&admin);
     
-    //create threads
+    //create threads (MISSING)
 
     //logBankOfficeOpen
     open_server(ADMIN_ACCOUNT_ID);
 
-    //logAccountCreation
 
     if(mkfifo(SERVER_FIFO_PATH,RDWR_USGR) < 0) {
         if(errno==EEXIST) {
@@ -63,7 +62,7 @@ int receive_requests() {
     //receive user requests
     int rq;
     tlv_request_t request;
-    //send server responses
+    //send server responses (HALFWAY)
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     //tlv_reply_t reply;
@@ -79,6 +78,8 @@ int receive_requests() {
             usleep(500);
             continue;
         }
+
+        show_request(request);
         //read pid of user and open fifo for comunication
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
         rs = open(fifo_path,O_WRONLY);
