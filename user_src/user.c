@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     char response [MAX_BUFFER];
+    //tlv_reply_t reply;
     int pid = getpid();
     time_t begin;
     
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     write(rq,&request,sizeof(request));
 
-    if ((rs=open(fifo_path,O_RDONLY)) == -1) {
+    if ((rs=open(fifo_path,O_RDONLY|O_NONBLOCK)) == -1) {
         return RC_USR_DOWN;
     }
     
@@ -78,8 +79,10 @@ int main(int argc, char *argv[]) {
     else
         printf("FIFO '%s' has been destroyed\n",fifo_path);
 
-    if(timeout)
+    if(timeout) {
+        printf("Timeout on reply.\n");
         return RC_SRV_TIMEOUT;
+    }
     else
         return RC_OK;
 }
