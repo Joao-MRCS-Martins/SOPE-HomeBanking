@@ -8,5 +8,6 @@
 #include <sys/stat.h>
 #include <pthread.h>
 #include "logging_server.h"
+#include "authentication.h"
 
 int handle_requests();

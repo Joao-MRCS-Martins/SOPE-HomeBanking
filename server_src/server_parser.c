@@ -1,7 +1,8 @@
-#include "server_parser.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "server_parser.h"
+#include "authentication.h"
 
 int input_parser(char* args[],bank_account_t * admin, int* nthr) {
     *nthr = atoi(args[1]);
@@ -27,8 +28,7 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
 
     admin->account_id = ADMIN_ACCOUNT_ID;
     admin->balance = 0;
-   /* admin->hash = "";
-    admin->salt = "";
-    */
+    strcpy(admin->salt, generateSALT());
+    strcpy(admin->hash, generateHASH(admin->salt, pass));
     return RC_OK;
 }

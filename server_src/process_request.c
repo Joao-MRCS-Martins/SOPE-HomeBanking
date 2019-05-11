@@ -1,7 +1,8 @@
-#include "process_request.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "process_request.h"
+#include "authentication.h"
 /*
 shared memory block
 array of bank accounts
@@ -9,6 +10,7 @@ e-counters
 semaphores
 */
 static bank_account_t* accounts[MAX_BANK_ACCOUNTS+1];
+
 void load_admin(bank_account_t *admin) {
     accounts[0] = admin;
 }

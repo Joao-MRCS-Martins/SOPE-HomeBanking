@@ -7,12 +7,6 @@ static bank_account_t admin;
 
 int receive_requests();
 
-void create_AdminAccount(char* password){
-    admin.account_id = ADMIN_ACCOUNT_ID;
-    admin.balance = 0;
-    strcpy(admin.salt, generateSALT());
-    strcpy(admin.hash, generateHASH(admin.salt, password));
-}
 
 int main (int argc, char *argv []) {
 
@@ -22,25 +16,14 @@ int main (int argc, char *argv []) {
         return RC_LOGIN_FAIL;
     }
 
-    //parse input and create admin bank account
-    create_AdminAccount(argv[2]);
-
-
+    //parse input and create admin account
     int nthr;
     int rc;
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
         return rc;
     }
 
-    // //recieve user requests
-    // int fd, fd_dummy;
-    // char name [MAX_PASSWORD_LEN];
-    // int pid;
-    // int opcode;
-    // //send server responses
-    // int fd2;
-    // char fifo_path [USER_FIFO_PATH_LEN];
-    // char response[MAX_PASSWORD_LEN];
+    printf("Parsing input\n");
 
     //load admin into bank accounts
     load_admin(&admin);
