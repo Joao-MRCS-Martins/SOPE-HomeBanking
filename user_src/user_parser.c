@@ -20,12 +20,15 @@ int input_parser(char* args[],tlv_request_t *req) {
         if((rc = fill_value(args[5],&value,type)) != 0) {
             return rc;
         }
+
+        req->length = sizeof(req->value);
     }
     else if (type == OP_BALANCE || type == OP_SHUTDOWN) {
         if(strcmp(args[5],"") != 0) {
             printf("This operation takes no arguments.\n");
             return RC_OP_NALLOW;
         }
+        req->length = sizeof(req->value.header);
     }
     else {
         printf("Invalid operation request.\n");
@@ -34,7 +37,7 @@ int input_parser(char* args[],tlv_request_t *req) {
 
     req->type = type;
     req->value = value;
-    req->length = sizeof(req->value);
+    
 
     return RC_OK;
 

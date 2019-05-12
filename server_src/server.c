@@ -90,7 +90,7 @@ int receive_requests() {
         write(rs,&reply,sizeof(reply));
 
         close(rs);
-    } while (request.type != OP_SHUTDOWN); //needs to check for valid request
+    } while (request.type != OP_SHUTDOWN || reply.value.header.ret_code != RC_OK); //needs to check for valid request
 
     close(rq);
     

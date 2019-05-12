@@ -36,7 +36,6 @@ int process_request(tlv_request_t *request, tlv_reply_t *reply) {
                 reply->value.header.ret_code = RC_LOGIN_FAIL;
             }
 
-            log_reply(reply, request->value.header.account_id);
 
             break;
         case OP_SHUTDOWN:
@@ -44,8 +43,10 @@ int process_request(tlv_request_t *request, tlv_reply_t *reply) {
                 printf("Only admin can shutdown the system\n");
                 reply->value.header.ret_code = RC_OP_NALLOW;
             }
-            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
-            
+            else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                
+                reply->value.header.ret_code = RC_OK;
+                //reply->value.header.ret_code = shutdown();
             }
             else
             {
@@ -53,27 +54,49 @@ int process_request(tlv_request_t *request, tlv_reply_t *reply) {
             }
             break;
         case OP_BALANCE:
-            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+            if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
+                printf("Only clients can check account balance\n");
+                reply->value.header.ret_code = RC_OP_NALLOW;
+            }
+            else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
                 
+                //reply->value.header.ret_code = balance();
             }
             else
             {
                 
+                reply->value.header.ret_code = RC_LOGIN_FAIL;
             }
             break;
         case OP_TRANSFER:
-            if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
-                            //make transfer
+            if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
+                printf("Only clients can transfer money\n");
+                reply->value.header.ret_code = RC_OP_NALLOW;
+            }
+            else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+                
+                //reply->value.header.ret_code = transfer();
+
             }
             else
             {
-                
+
+                reply->value.header.ret_code = RC_LOGIN_FAIL;   
             }
             break;
         default:
-            //do nothing
+            reply->value.header.ret_code = RC_OTHER;   
             break;
     }
+    
+    if(request->type == OP_CREATE_ACCOUNT) {
+        reply->length = sizeof(reply->value.header);
+    }
+    else {
+        reply->length = sizeof(reply->value);
+    }
+    
+    log_reply(reply, request->value.header.account_id);
     
     return RC_OK;
 }
