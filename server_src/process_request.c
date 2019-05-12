@@ -62,9 +62,9 @@ int transfer(tlv_request_t *request, tlv_reply_t *reply){
         return RC_NO_FUNDS;
     }
     else{
-        int final_balance = request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance;
-        accounts[request->value.transfer.account_id]->balance = final_balance;
-        reply->value.transfer.balance = final_balance;
+        accounts[request->value.header.account_id]->balance -= request->value.transfer.amount;
+        accounts[request->value.transfer.account_id]->balance += request->value.transfer.amount;
+        reply->value.transfer.balance = accounts[request->value.header.account_id]->balance;
         return RC_OK;
     }
 }
