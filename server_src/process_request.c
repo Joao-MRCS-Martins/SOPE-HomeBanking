@@ -17,7 +17,7 @@ void load_admin(bank_account_t *admin) {
 int process_request(tlv_request_t *request, tlv_reply_t *reply) {
 
     show_request(*request);
-    log_request(request, request->value.header.account_id);
+    log_request(request, 0); // TO BE ALTERED, MUST BE THREAD ID
     
     reply->type = request->type;
     reply->value.header.account_id = request->value.header.account_id;
@@ -89,14 +89,14 @@ int process_request(tlv_request_t *request, tlv_reply_t *reply) {
             break;
     }
     
-    if(request->type == OP_CREATE_ACCOUNT) {
+    if(reply->type == OP_CREATE_ACCOUNT || reply->value.header.ret_code != RC_OK) {
         reply->length = sizeof(reply->value.header);
     }
     else {
         reply->length = sizeof(reply->value);
     }
     
-    log_reply(reply, request->value.header.account_id);
+    log_reply(reply, 0); // TO BE ALTERED, MUST BE THREAD ID
     
     return RC_OK;
 }
@@ -113,7 +113,11 @@ int create_account(tlv_request_t *req) {
     account->balance = req->value.create.balance;
     strcpy(account->salt, generateSALT());
     strcpy(account->hash, generateHASH(account->salt, req->value.create.password));
+    
+    /*enter critical section */
+    usleep(req->value.header.op_delay_ms);
     accounts[account->account_id] = account;
 
+    log_creat_acc(account,0); // TO BE ALTERED MUST BE THREAD ID
     return RC_OK;
 }
