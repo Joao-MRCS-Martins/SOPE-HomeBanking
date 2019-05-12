@@ -8,6 +8,7 @@ void open_server(int bank_id){
     logBankOfficeOpen(fd, bank_id, tid);
 
     close(fd);
+    fclose(f);
 }
 
 void close_server(int bank_id){
@@ -18,18 +19,21 @@ void close_server(int bank_id){
     logBankOfficeClose(fd, bank_id, tid);
 
     close(fd);
+    fclose(f);
 }
 
 void log_reply(tlv_reply_t *reply, int bank_id){
-    FILE * f = fopen(USER_LOGFILE, "a");
+    FILE * f = fopen(SERVER_LOGFILE, "a");
     int fd = fileno(f);
 
     logReply(fd, bank_id, reply);
+    fclose(f);
 }
 
 void log_request(tlv_request_t *request, int bank_id){
-    FILE * f = fopen(USER_LOGFILE, "a");
+    FILE * f = fopen(SERVER_LOGFILE, "a");
     int fd = fileno(f);
 
     logRequest(fd, bank_id, request);
+    fclose(f);
 }

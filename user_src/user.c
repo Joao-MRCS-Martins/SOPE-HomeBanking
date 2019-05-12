@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#include "logging_user.h"
 #include "user_parser.h"
 #include "../auxiliary_code/show_info.h"
 
@@ -19,8 +20,6 @@ int main(int argc, char *argv[]) {
         return RC_LOGIN_FAIL;
     }
 
-    //open log file(MISSING)
-
     //parsing request
     int rq;
     tlv_request_t request;
@@ -30,15 +29,15 @@ int main(int argc, char *argv[]) {
         return rc;
     }
     
-    //receive answer from server(HALFWAY)
+    log_request(&request);
+
+    //receive answer from server
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
-    //char response [MAX_BUFFER];
     tlv_reply_t reply;
-    int pid = getpid();
     time_t begin;
     
-    sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,pid);
+    sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
     if (mkfifo(fifo_path,RDWR_USGR)<0) {
         if (errno==EEXIST) {
             //return RC_OTHER;
@@ -56,6 +55,7 @@ int main(int argc, char *argv[]) {
 
     write(rq,&request,sizeof(request));
 
+    
     if ((rs=open(fifo_path,O_RDONLY|O_NONBLOCK)) == -1) {
         return RC_USR_DOWN;
     }
@@ -64,11 +64,13 @@ int main(int argc, char *argv[]) {
     time(&begin);
     while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
         if(read(rs,&reply,sizeof(reply)) > 0) {
+            log_reply(&reply);
             show_reply(reply);
             timeout = false;
             break;
         }
     }
+
 
     close(rq);
     close(rs);
