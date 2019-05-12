@@ -86,6 +86,7 @@ void show_ret_code(ret_code_t code) {
 }
 
 void show_request(tlv_request_t req) {
+    printf("///////////////////////////////////////////\n");
     printf("Request report:\n");
     show_op_type(req.type);
     printf("Request length: %d\n",req.length);
@@ -102,9 +103,11 @@ void show_request(tlv_request_t req) {
         printf("Request Transfer to account id: %d\n",req.value.transfer.account_id);
         printf("Request Transfer amount: %d\n",req.value.transfer.amount);
     }
+    printf("///////////////////////////////////////////\n");
 }
 
 void show_reply(tlv_reply_t rep) {
+    printf("///////////////////////////////////////////\n");
     printf("Reply report:\n");
     show_op_type(rep.type);
     printf("Reply length: %d\n",rep.length);
@@ -122,12 +125,15 @@ void show_reply(tlv_reply_t rep) {
     default:
         break;
     }
+    printf("///////////////////////////////////////////\n");
 }
 
 void show_account(bank_account_t account) {
+    printf("///////////////////////////////////////////\n");    
     printf("Account details:\n");
     printf("Account id: %d\n",account.account_id);
     printf("Account hash: %s\n",account.hash);
     printf("Account salt: %s\n",account.salt);
     printf("Account balance: %d\n",account.balance);
+    printf("///////////////////////////////////////////\n");
 }
