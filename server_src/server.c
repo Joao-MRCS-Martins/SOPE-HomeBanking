@@ -18,6 +18,7 @@ int main (int argc, char *argv []) {
     //parse input and create admin account
     int nthr;
     int rc;
+
     if((rc = input_parser(argv,&admin,&nthr)) > 0) {
         show_usage_server();
         return rc;
@@ -85,7 +86,7 @@ int receive_requests() {
             return RC_USR_DOWN;
         }
 
-        process_request(&request,&reply);
+        process_request(&request,&reply, rq);
         
         write(rs,&reply,sizeof(reply));
 

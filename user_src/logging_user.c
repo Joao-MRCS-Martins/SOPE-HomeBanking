@@ -3,16 +3,16 @@
 void log_reply(tlv_reply_t *reply){
     FILE * f = fopen(USER_LOGFILE, "a");
     int fd = fileno(f);
-    pid_t id = getpid();
-    logReply(fd, id, reply);
-    fclose(f);
+
+    logReply(fd, reply->value.header.account_id, reply);
+
+    close(fd);
 }
 
 void log_request(tlv_request_t *request){
     FILE * f = fopen(USER_LOGFILE, "a");
     int fd = fileno(f);
-    pid_t id = getpid();
 
-    logRequest(fd, id, request);
-    fclose(f);
+    logRequest(fd, request->value.header.account_id, request);
+    close(fd);
 }

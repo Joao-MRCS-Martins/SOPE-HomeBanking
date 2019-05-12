@@ -40,7 +40,6 @@ int input_parser(char* args[],tlv_request_t *req) {
     
 
     return RC_OK;
-
 }
 
 int fill_header(char* args[],req_header_t *header) {

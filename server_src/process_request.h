@@ -2,11 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "authentication.h"
 #include "logging_server.h"
 
 void load_admin(bank_account_t* admin);
 
-int process_request(tlv_request_t *request, tlv_reply_t *reply);
+int process_request(tlv_request_t *request, tlv_reply_t *reply, int rq);
 
 int create_account(tlv_request_t *req);

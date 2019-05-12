@@ -27,6 +27,8 @@ void log_reply(tlv_reply_t *reply, int bank_id){
     int fd = fileno(f);
 
     logReply(fd, bank_id, reply);
+    
+    close(fd);
     fclose(f);
 }
 
@@ -35,5 +37,7 @@ void log_request(tlv_request_t *request, int bank_id){
     int fd = fileno(f);
 
     logRequest(fd, bank_id, request);
+    
+    close(fd);
     fclose(f);
 }
