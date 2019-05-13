@@ -106,7 +106,7 @@ int fill_value(char* args,req_value_t *value, op_type_t type) {
         value->create.balance = quantity;
 
         sprintf(value->create.password,strtok(NULL," "));
-        if(strlen(value->header.password) < MIN_PASSWORD_LEN || strlen(value->header.password) > MAX_PASSWORD_LEN) {
+        if(strlen(value->create.password) < MIN_PASSWORD_LEN || strlen(value->create.password) > MAX_PASSWORD_LEN) {
             printf("Password must be between 8 and 20 characters long.\n");
             return FAILURE;
         }

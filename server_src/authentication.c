@@ -15,62 +15,33 @@ char* generateSALT(){
 
 char* generateHASH(char * salt, char * password){
     char * concatenation = malloc(sizeof(salt) + sizeof(password));
-    char * result = malloc(HASH_LEN + 1);
+    char * result = malloc(HASH_LEN);
 
     strcpy(concatenation, password);
     strcat(concatenation, salt);
 
-    //printf("%s\n", concatenation);
-
-    int pipe_des[2];
-
-    if(pipe(pipe_des) != 0){
-        perror("Failed to open pipe descriptors\n");  
+    char* hash_command = malloc(MAX_BUFFER);
+    strcpy(hash_command,"echo ");
+    strcat(hash_command,concatenation);
+    strcat(hash_command," | sha256sum");
+    FILE* f = popen(hash_command,"r");
+    
+    if(fread(result,1,HASH_LEN,f) <0) {
+        perror(result);
+        exit(1);
     }
 
-    pid_t pid = fork();
-
-    if(pid == 0){
-        close(pipe_des[0]);
-
-        dup2(pipe_des[1], STDOUT_FILENO);
-
-        execlp("echo", "echo", concatenation, NULL);
-    }
-    else{
-        close(pipe_des[1]);
-
-        int pipe_des2[2];
-        
-        pid = fork();
-
-        if(pipe(pipe_des2) != 0){
-            perror("Failed to open secondary pipe descriptors\n");  
-        }
-
-        if(pid == 0){
-            close(pipe_des2[0]);
-
-            dup2(pipe_des2[1], STDOUT_FILENO);
-
-            execlp("sha256sum", "sha256sum", NULL);
-        }
-        else{
-            close(pipe_des2[1]);
-
-            read(pipe_des2[0], result, HASH_LEN);
-
-            close(pipe_des2[0]);
-        }
-
-        close(pipe_des[0]);
-    }
-
+    pclose(f);
+    free(hash_command);
+    free(concatenation);
+    
+    strcpy(result,strtok(result," "));
+    
     return result;
 }
 
 bool checkPassword(bank_account_t *bank_account, char * password){
     char * result = generateHASH(bank_account->salt, password);
-
+    
     return (strcmp(result,bank_account->hash) == 0);
 }
