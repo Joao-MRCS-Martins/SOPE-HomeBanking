@@ -11,22 +11,22 @@
 #include "logging_user.h"
 #include "user_parser.h"
 #include "../auxiliary_code/show_info.h"
+#include "fail_reply.h"
 
 int main(int argc, char *argv[]) {
     
     if(argc != 6) {
         printf("Wrong number of arguments.\n");
         show_usage_user();
-        return RC_LOGIN_FAIL;
+        return FAILURE;
     }
 
     //parsing request
     int rq;
     tlv_request_t request;
-    int rc;
-    if ((rc = input_parser(argv,&request))  > 0) {
+    if (input_parser(argv,&request)  != SUCCESS) {
         show_usage_user();
-        return rc;
+        return FAILURE;
     }
     
     log_request(&request);
@@ -39,25 +39,28 @@ int main(int argc, char *argv[]) {
     
     sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
     if (mkfifo(fifo_path,RDWR_USGR)<0) {
-        if (errno==EEXIST) {
-            //return RC_OTHER;
-        }
-        else {
-            perror(fifo_path);
-            return RC_OTHER;
-        }
+        fail_reply(&reply,&request,RC_OTHER);
+        log_reply(&reply);
+        show_reply(reply);
+        return FAILURE;
     }
 
     rq=open(SERVER_FIFO_PATH,O_WRONLY);
     if (rq == -1) {
-        return RC_USR_DOWN;
+        fail_reply(&reply,&request,RC_SRV_DOWN);
+        log_reply(&reply);
+        show_reply(reply);
+        return FAILURE;
     }
 
     write(rq,&request,sizeof(request));
 
     
     if ((rs=open(fifo_path,O_RDONLY|O_NONBLOCK)) == -1) {
-        return RC_USR_DOWN;
+        fail_reply(&reply,&request,RC_USR_DOWN);
+        log_reply(&reply);
+        show_reply(reply);
+        return FAILURE;
     }
     
     bool timeout = true;
@@ -71,20 +74,25 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
     close(rq);
     close(rs);
-    if(unlink(fifo_path) < 0) {
-        printf("Error when destroying FIFO '%s'\n",fifo_path);
-        return RC_OTHER;
-    }
-    else
-        printf("FIFO '%s' has been destroyed\n",fifo_path);
-
+    
     if(timeout) {
         printf("Timeout on reply.\n");
-        return RC_SRV_TIMEOUT;
+        fail_reply(&reply,&request,RC_SRV_TIMEOUT);
+        log_reply(&reply);
+        show_reply(reply);
+        unlink(fifo_path);
+
+        return FAILURE;
     }
-    else
-        return RC_OK;
+    else {
+
+        if(unlink(fifo_path) <0) {
+            printf("Error when destroying FIFO '%s'\n",fifo_path);
+            return FAILURE;
+        }
+        printf("FIFO '%s' has been destroyed\n",fifo_path);
+        return SUCCESS;
+    }
 }

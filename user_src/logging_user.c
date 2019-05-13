@@ -7,6 +7,7 @@ void log_reply(tlv_reply_t *reply){
     logReply(fd, reply->value.header.account_id, reply);
 
     close(fd);
+    fclose(f);
 }
 
 void log_request(tlv_request_t *request){
@@ -15,4 +16,5 @@ void log_request(tlv_request_t *request){
 
     logRequest(fd, request->value.header.account_id, request);
     close(fd);
+    fclose(f);
 }

@@ -3,7 +3,7 @@
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
 
-static bank_account_t admin;
+static bank_account_t admin; //is it necessary?
 
 int receive_requests();
 
@@ -12,43 +12,44 @@ int main (int argc, char *argv []) {
     if(argc != 3) {
         printf("Wrong number of arguments.\n");
         show_usage_server();
-        return RC_LOGIN_FAIL;
+        return FAILURE;
     }
 
     //parse input and create admin account
     int nthr;
-    int rc;
+    
 
-    if((rc = input_parser(argv,&admin,&nthr)) > 0) {
+    if(input_parser(argv,&admin,&nthr) != SUCCESS) {
         show_usage_server();
-        return rc;
+        return FAILURE;
     }
 
-    //log admin account creation (MISSING)
-
-    //load admin into bank accounts
-    load_admin(&admin);
-    
     //create threads (MISSING)
 
     //logBankOfficeOpen
     open_server(ADMIN_ACCOUNT_ID);
 
+    //load admin into bank accounts
+    load_admin(&admin);
+    
+    //log admin account creation 
+    log_creat_acc(&admin,ADMIN_ACCOUNT_ID);
+
 
     if(mkfifo(SERVER_FIFO_PATH,RDWR_USGR) < 0) {
         if(errno==EEXIST) {
-            //perror(SERVER_FIFO_PATH);
-            //return RC_OTHER;
+            perror(SERVER_FIFO_PATH);
+            return FAILURE;
         }
         else
-            return RC_OTHER;
+            return FAILURE;
     }
 
-    rc = receive_requests();
+    int rc = receive_requests();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
         printf("Error when destroying FIFO '%s'\n",SERVER_FIFO_PATH);
-        return RC_OTHER;
+        return FAILURE;
     }
     else
         printf("FIFO '%s' has been destroyed\n",SERVER_FIFO_PATH);
@@ -69,7 +70,7 @@ int receive_requests() {
     tlv_reply_t reply;
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
-        return RC_SRV_DOWN;
+        return FAILURE;
     }    
     
     do
@@ -83,7 +84,7 @@ int receive_requests() {
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
         rs = open(fifo_path,O_WRONLY);
         if(rs == -1) {
-            return RC_USR_DOWN;
+            continue; //failing to communicate with user, continues listening for requests
         }
 
         process_request(&request,&reply, rq);
@@ -91,9 +92,10 @@ int receive_requests() {
         write(rs,&reply,sizeof(reply));
 
         close(rs);
+        
     } while (request.type != OP_SHUTDOWN || reply.value.header.ret_code != RC_OK); //needs to check for valid request
 
     close(rq);
     
-    return RC_OK;
+    return SUCCESS;
 }

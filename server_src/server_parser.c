@@ -10,18 +10,18 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
 
     if(*nthr < 0 || *nthr > MAX_BANK_OFFICES) {
         printf("Number of e-counters must be in range: 0-%d\n",MAX_BANK_OFFICES);
-        return RC_LOGIN_FAIL;
+        return FAILURE;
     }
 
     if(strlen(args[2]) < MIN_PASSWORD_LEN || strlen(args[2]) > MAX_PASSWORD_LEN) {
         printf("Password must be between 8 and 20 characters long.\n");
-        return RC_LOGIN_FAIL;
+        return FAILURE;
     }
 
     sprintf(pass,strtok(args[2]," "));
     if(strtok(NULL," ") != NULL) {
         printf("Password can't contain spaces.\n");
-        return RC_OP_NALLOW;
+        return FAILURE;
     }
 
     admin->account_id = ADMIN_ACCOUNT_ID;
@@ -29,5 +29,5 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
     strcpy(admin->salt, generateSALT());
     strcpy(admin->hash, generateHASH(admin->salt, pass));
     
-    return RC_OK;
+    return SUCCESS;
 }
