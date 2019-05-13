@@ -2,7 +2,7 @@ CC = gcc
 RM=rm -f
 
 CFLAGS=-g -Wall -I. -D_GNU_SOURCE
-LDFLAGS=-g
+LDFLAGS=-g -pthread
 LDLIBS=
 
 #Depend file stuff

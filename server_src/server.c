@@ -2,8 +2,11 @@
 #include "server_parser.h"
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
+#include "request_queue.h"
 
 static bank_account_t admin; //is it necessary?
+
+static request_queue_t* request_queue;
 
 int receive_requests();
 
@@ -23,6 +26,9 @@ int main (int argc, char *argv []) {
         show_usage_server();
         return FAILURE;
     }
+
+    //initalize request queue
+    request_queue = request_queue_init();
 
     //create threads (MISSING)
 
@@ -55,6 +61,8 @@ int main (int argc, char *argv []) {
         printf("FIFO '%s' has been destroyed\n",SERVER_FIFO_PATH);
     
     close_server(ADMIN_ACCOUNT_ID);
+
+    request_queue_delete(request_queue);
 
     return rc;
 }
