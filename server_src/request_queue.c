@@ -1,4 +1,5 @@
 #include "request_queue.h"
+#include <stdlib.h>
 
 request_queue_t* request_queue_init() {
     request_queue_t* queue = malloc(sizeof(request_queue_t));
@@ -33,7 +34,7 @@ int request_queue_push(request_queue_t* queue, tlv_request_t item) {
     sem_post(&queue->unhandeled_requests);
 
     //insert first node if the queue is empty
-    if (empty_queue(queue)) {
+    if (empty_request_queue(queue)) {
         queue->front = new_node;
         queue->rear = new_node;
     }
@@ -47,7 +48,7 @@ int request_queue_push(request_queue_t* queue, tlv_request_t item) {
 
 
 int request_queue_pop(request_queue_t* queue) {
-    if (empty_queue(queue)) {
+    if (empty_request_queue(queue)) {
         return 1;
     }
     else {
@@ -72,8 +73,8 @@ tlv_request_t get_request_queue_front(request_queue_t* queue) {
  
 
 void request_queue_delete(request_queue_t* queue) {
-    while(!empty_queue(queue)) {
-        queue_pop(queue);
+    while(!empty_request_queue(queue)) {
+        request_queue_pop(queue);
     }
     free(queue);
 }

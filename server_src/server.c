@@ -4,7 +4,7 @@
 #include "../auxiliary_code/show_info.h"
 #include "request_queue.h"
 
-static bank_account_t admin; //is it necessary?
+//static bank_account_t admin; //is it necessary?
 
 static request_queue_t* request_queue;
 
@@ -20,9 +20,10 @@ int main (int argc, char *argv []) {
 
     //parse input and create admin account
     int nthr;
-    
+    bank_account_t* admin = malloc(sizeof(bank_account_t));
+    memset(admin,0,sizeof(bank_account_t));
 
-    if(input_parser(argv,&admin,&nthr) != SUCCESS) {
+    if(input_parser(argv,admin,&nthr) != SUCCESS) {
         show_usage_server();
         return FAILURE;
     }
@@ -36,10 +37,10 @@ int main (int argc, char *argv []) {
     open_server(ADMIN_ACCOUNT_ID);
 
     //load admin into bank accounts
-    load_admin(&admin);
+    load_admin(admin);
     
     //log admin account creation 
-    log_creat_acc(&admin,ADMIN_ACCOUNT_ID);
+    log_creat_acc(admin,ADMIN_ACCOUNT_ID);
 
 
     if(mkfifo(SERVER_FIFO_PATH,RDWR_USGR) < 0) {
@@ -52,6 +53,9 @@ int main (int argc, char *argv []) {
     }
 
     int rc = receive_requests();
+
+    //after all threads finish processing their requests call this
+    clean_accounts();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
         printf("Error when destroying FIFO '%s'\n",SERVER_FIFO_PATH);
@@ -72,10 +76,12 @@ int receive_requests() {
     //receive user requests
     int rq;
     tlv_request_t request;
-    //send server responses (HALFWAY)
+    memset(&request,0,sizeof(tlv_request_t));
+    
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     tlv_reply_t reply;
+    memset(&reply,0,sizeof(tlv_reply_t));
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
         return FAILURE;

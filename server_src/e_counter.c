@@ -16,7 +16,7 @@ void* start_e_counter(void* args) {
 
     sem_wait(&request_queue->unhandeled_requests);
 
-    
+    return NULL; //only for compilation purposes, no real meaning
 }
 
 int create_e_counter(request_queue_t* request_queue) {
