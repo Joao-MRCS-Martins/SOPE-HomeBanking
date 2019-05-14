@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
     sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
     if (mkfifo(fifo_path,RDWR_USGR)<0) {
         fail_reply(&reply,&request,RC_OTHER);
-        log_reply(&reply);
         show_reply(reply);
         return FAILURE;
     }
@@ -51,7 +50,6 @@ int main(int argc, char *argv[]) {
     rq=open(SERVER_FIFO_PATH,O_WRONLY);
     if (rq == -1) {
         fail_reply(&reply,&request,RC_SRV_DOWN);
-        log_reply(&reply);
         show_reply(reply);
         return FAILURE;
     }
@@ -61,7 +59,6 @@ int main(int argc, char *argv[]) {
     
     if ((rs=open(fifo_path,O_RDONLY|O_NONBLOCK)) == -1) {
         fail_reply(&reply,&request,RC_USR_DOWN);
-        log_reply(&reply);
         show_reply(reply);
         return FAILURE;
     }
@@ -83,7 +80,6 @@ int main(int argc, char *argv[]) {
     if(timeout) {
         printf("Timeout on reply.\n");
         fail_reply(&reply,&request,RC_SRV_TIMEOUT);
-        log_reply(&reply);
         show_reply(reply);
         unlink(fifo_path);
 

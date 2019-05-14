@@ -25,4 +25,12 @@ void fail_reply(tlv_reply_t * rep, tlv_request_t *req, ret_code_t rc) {
             break;
 
     }
+
+    FILE * f = fopen(USER_LOGFILE, "a");
+    int fd = fileno(f);
+
+    logReply(fd, FAILURE, reply);
+
+    close(fd);
+    fclose(f);
 }
