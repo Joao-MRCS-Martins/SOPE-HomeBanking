@@ -5,7 +5,7 @@ void fail_reply(tlv_reply_t * rep, tlv_request_t *req, ret_code_t rc) {
     rep->type = req->type;
     rep->value.header.account_id = req->value.header.account_id;
     rep->value.header.ret_code = rc;
-    rep->length = sizeof(rep->value);
+    rep->length = sizeof(rep->value.header);
     
     switch(req->type) {
         case OP_CREATE_ACCOUNT:
@@ -25,12 +25,4 @@ void fail_reply(tlv_reply_t * rep, tlv_request_t *req, ret_code_t rc) {
             break;
 
     }
-
-    FILE * f = fopen(USER_LOGFILE, "a");
-    int fd = fileno(f);
-
-    logReply(fd, FAILURE, reply);
-
-    close(fd);
-    fclose(f);
 }
