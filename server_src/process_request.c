@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
 /*
@@ -47,17 +48,18 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep) {
     }
 }
 
-void shutdown(tlv_request_t *request, tlv_reply_t *reply, int rq) {
-    
+void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
+
     reply->value.shutdown.active_offices = 0; // error value (to be confirmed)
     if(request->value.header.account_id != ADMIN_ACCOUNT_ID) {
         printf("Only admin can shutdown the system\n");
         reply->value.header.ret_code = RC_OP_NALLOW;
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)) {
-                
         usleep(request->value.header.op_delay_ms);
         log_delay(request->value.header.op_delay_ms,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+
+        int rq = open(SERVER_FIFO_PATH,O_RDONLY);
 
         if(fchmod(rq, READ_ALL) == 0) {
             reply->value.shutdown.active_offices = 3; // wrong value - must be active threads number
@@ -133,7 +135,7 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply) {
 
 }
 
-void process_request(tlv_request_t *request, tlv_reply_t *reply, int rq) {
+void process_request(tlv_request_t *request, tlv_reply_t *reply) {
 
     show_request(*request);
     log_request(request, MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
@@ -151,7 +153,7 @@ void process_request(tlv_request_t *request, tlv_reply_t *reply, int rq) {
             break;
 
         case OP_SHUTDOWN:
-            shutdown(request,reply,rq);
+            shutdown(request,reply);
             break;
 
         case OP_BALANCE:

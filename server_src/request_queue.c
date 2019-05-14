@@ -1,11 +1,13 @@
 #include "request_queue.h"
+#include <stdlib.h>
 
-request_queue_t* request_queue_init() {
+request_queue_t* request_queue_init(int request_slots) {
     request_queue_t* queue = malloc(sizeof(request_queue_t));
 
     queue->front = NULL;
     queue->rear = NULL;
-    sem_init(&queue->unhandeled_requests,SHARED,0);
+    sem_init(&queue->request_slots,SHARED,request_slots);
+    sem_init(&queue->requests_waiting,SHARED,0);
 
     return queue;
 }
@@ -26,14 +28,14 @@ int request_queue_push(request_queue_t* queue, tlv_request_t item) {
         return 1;
     }
 
+    //check if there are slots available (and decreses them)
+    sem_wait(&queue->request_slots);
+
     new_node->data = item;
     new_node->next = NULL;
 
-    //increases semaphore
-    sem_post(&queue->unhandeled_requests);
-
     //insert first node if the queue is empty
-    if (empty_queue(queue)) {
+    if (empty_request_queue(queue)) {
         queue->front = new_node;
         queue->rear = new_node;
     }
@@ -42,12 +44,15 @@ int request_queue_push(request_queue_t* queue, tlv_request_t item) {
         queue->rear = new_node;
     }
 
+    //increase requests waiting for handling
+    sem_post(&queue->requests_waiting);
+
     return 0;
 }
 
-
+//poping creates a new slot 
 int request_queue_pop(request_queue_t* queue) {
-    if (empty_queue(queue)) {
+    if (empty_request_queue(queue)) {
         return 1;
     }
     else {
@@ -62,6 +67,9 @@ int request_queue_pop(request_queue_t* queue) {
             queue->front = queue->front->next;
             free(delete);
         }
+
+        sem_post(&queue->request_slots);
+
         return 0;
     }
 } 
@@ -72,9 +80,13 @@ tlv_request_t get_request_queue_front(request_queue_t* queue) {
  
 
 void request_queue_delete(request_queue_t* queue) {
-    while(!empty_queue(queue)) {
-        queue_pop(queue);
+    while(!empty_request_queue(queue)) {
+        request_queue_pop(queue);
     }
     free(queue);
+}
+
+void request_queue_wait_for_request(request_queue_t* queue) {
+    sem_wait(&queue->requests_waiting);
 }
 

@@ -8,11 +8,11 @@
 
 void load_admin(bank_account_t* admin);
 
-void process_request(tlv_request_t *request, tlv_reply_t *reply, int rq);
+void process_request(tlv_request_t *request, tlv_reply_t *reply);
 
 void create_account(tlv_request_t *req,tlv_reply_t *rep);
 
-void shutdown(tlv_request_t *request, tlv_reply_t *reply, int rq);
+void shutdown(tlv_request_t *request, tlv_reply_t *reply);
 
 void balance(tlv_request_t *request, tlv_reply_t *reply);
 

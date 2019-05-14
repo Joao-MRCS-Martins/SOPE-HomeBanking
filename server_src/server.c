@@ -3,8 +3,11 @@
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
 #include "request_queue.h"
+#include "e_counter.h"
 
 static bank_account_t admin; //is it necessary?
+
+extern bool server_shutdown;
 
 static request_queue_t* request_queue;
 
@@ -28,9 +31,12 @@ int main (int argc, char *argv []) {
     }
 
     //initalize request queue
-    request_queue = request_queue_init();
+    request_queue = request_queue_init(nthr);
 
     //create threads (MISSING)
+    init_e_counters(0);
+
+    create_e_counters(request_queue,nthr);
 
     //logBankOfficeOpen
     open_server(ADMIN_ACCOUNT_ID);
@@ -51,6 +57,7 @@ int main (int argc, char *argv []) {
             return FAILURE;
     }
 
+    printf("MAIN: started to receive requests\n");
     int rc = receive_requests();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
@@ -72,10 +79,6 @@ int receive_requests() {
     //receive user requests
     int rq;
     tlv_request_t request;
-    //send server responses (HALFWAY)
-    int rs;
-    char fifo_path [USER_FIFO_PATH_LEN];
-    tlv_reply_t reply;
     
     if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
         return FAILURE;
@@ -88,20 +91,11 @@ int receive_requests() {
             continue;
         }
 
-        //read pid of user and open fifo for comunication
-        sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
-        rs = open(fifo_path,O_WRONLY);
-        if(rs == -1) {
-            continue; //failing to communicate with user, continues listening for requests
-        }
-
-        process_request(&request,&reply, rq);
+        printf("MAIN: pushing\n");
+        request_queue_push(request_queue,request);
+        printf("MAIN : pushed\n");
         
-        write(rs,&reply,sizeof(reply));
-
-        close(rs);
-        
-    } while (request.type != OP_SHUTDOWN || reply.value.header.ret_code != RC_OK); //needs to check for valid request
+    } while (!server_shutdown); //needs to check for valid request
 
     close(rq);
     
