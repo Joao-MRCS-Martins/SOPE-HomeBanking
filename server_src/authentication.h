@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-char* generateSALT();
-char* generateHASH(char * salt, char * password);
+void generateSALT(char *salt);
+
+void generateHASH(char * salt, char * password, char* result);
+
 bool checkPassword(bank_account_t *bank_account, char * password);

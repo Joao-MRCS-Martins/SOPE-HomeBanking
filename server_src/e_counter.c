@@ -25,15 +25,12 @@ void* start_e_counter(void* args) {
     tlv_reply_t reply;
 
     while (!server_shutdown) {
-        printf("blocked\n");
         request_queue_wait_for_request(request_queue);
-        printf("not blocked\n");
 
         pthread_mutex_lock(&queue_lock);        
 
         tlv_request_t request = get_request_queue_front(request_queue);
         request_queue_pop(request_queue);
-        printf("poped\n");
 
         pthread_mutex_unlock(&queue_lock);
 
@@ -49,16 +46,12 @@ void* start_e_counter(void* args) {
 
         close(rs);
 
-        printf("THREAD: written\n");
-
         if (request.type == OP_SHUTDOWN && reply.value.header.ret_code == RC_OK ) {
             server_shutdown = true;
         }
 
-        printf("thread: fin\n");
     }
 
-    printf("exited\n");
     pthread_exit(NULL);
 }
 

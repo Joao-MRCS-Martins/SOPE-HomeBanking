@@ -37,4 +37,4 @@
 #define READ_ALL 0444
 #define MAX_BUFFER 256
 #define SUCCESS 0
-#define FAILURE 1
+#define FAILURE -1

@@ -17,3 +17,5 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply);
 void balance(tlv_request_t *request, tlv_reply_t *reply);
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply);
+
+void clean_accounts();

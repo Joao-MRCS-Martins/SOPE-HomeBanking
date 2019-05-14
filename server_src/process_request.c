@@ -32,11 +32,13 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep) {
         }
         
         bank_account_t *account = malloc(sizeof(bank_account_t));
-        
+        memset(account,0,sizeof(bank_account_t));
+
         account->account_id = req->value.create.account_id;
         account->balance = req->value.create.balance;
-        strcpy(account->salt, generateSALT());
-        strcpy(account->hash, generateHASH(account->salt, req->value.create.password));
+        
+        generateSALT(account->salt);
+        generateHASH(account->salt, req->value.create.password,account->hash);
         accounts[account->account_id] = account;
         rep->value.header.ret_code = RC_OK;
 
@@ -177,4 +179,12 @@ void process_request(tlv_request_t *request, tlv_reply_t *reply) {
     }
     
     log_reply(reply, MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+}
+
+void clean_accounts() {
+    for(int i =0; i < MAX_BANK_ACCOUNTS+1;i++) {
+        if(accounts[i] != 0) {
+            free(accounts[i]);
+        }
+    } 
 }

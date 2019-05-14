@@ -5,7 +5,9 @@
 
 int input_parser(char* args[],tlv_request_t *req) {
     req_header_t header;
+    memset(&header,0,sizeof(req_header_t));
     req_value_t value;
+    memset(&value,0,sizeof(req_value_t));
 
     if(fill_header(args,&header) != SUCCESS) {
         return  FAILURE;

@@ -24,6 +24,8 @@ int main(int argc, char *argv[]) {
     //parsing request
     int rq;
     tlv_request_t request;
+    memset(&request,0,sizeof(tlv_request_t));
+
     if (input_parser(argv,&request)  != SUCCESS) {
         show_usage_user();
         return FAILURE;
@@ -35,6 +37,7 @@ int main(int argc, char *argv[]) {
     int rs;
     char fifo_path [USER_FIFO_PATH_LEN];
     tlv_reply_t reply;
+    memset(&reply,0,sizeof(tlv_reply_t));
     time_t begin;
     
     sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);

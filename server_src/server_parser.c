@@ -26,8 +26,9 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
 
     admin->account_id = ADMIN_ACCOUNT_ID;
     admin->balance = 0;
-    strcpy(admin->salt, generateSALT());
-    strcpy(admin->hash, generateHASH(admin->salt, pass));
+    
+    generateSALT(admin->salt);
+    generateHASH(admin->salt, pass,admin->hash);
     
     return SUCCESS;
 }
