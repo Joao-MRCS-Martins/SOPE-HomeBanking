@@ -1,5 +1,8 @@
 #include "authentication.h"
 
+#define READ    0
+#define WRITE   1
+
 void generateSALT(char *salt){
     char hexadecimals[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
     char c;
@@ -13,25 +16,45 @@ void generateSALT(char *salt){
 void generateHASH(char * salt, char * password,char * result){
     char concatenation[strlen(salt)+strlen(password)+1];
 
-    sprintf(concatenation,"%s%s", password, salt);
+    char result_tmp[HASH_LEN+1];
 
-    char* hash_command = malloc(MAX_BUFFER);
-    sprintf(hash_command,"echo %s | sha256sum",concatenation);
+    sprintf(concatenation,"%s%s\0", password, salt);
 
-    FILE* f = popen(hash_command,"r");
-    
-    if(fread(result,1,HASH_LEN,f) <0) {
-        perror(result);
-        exit(1);
+    int pipe1[2];
+
+    if(pipe(pipe1) != 0){
+        perror("Failed to open first pipe descriptors\n");  
     }
 
-    pclose(f);
-    free(hash_command);
+    int pipe2[2];
+
+    if(pipe(pipe2) != 0){
+        perror("Failed to open second pipe descriptors\n");  
+    }
+
+    pid_t pid = fork();
+
+    if(pid == 0){
+        close(pipe1[WRITE]);
+        close(pipe2[READ]);
+
+        dup2(pipe1[READ], STDIN_FILENO);
+        dup2(pipe2[WRITE], STDOUT_FILENO);
+
+        execlp("sha256sum", "sha256sum", NULL);
+    }
+    else{
+        close(pipe1[READ]);
+        close(pipe2[WRITE]);
+
+        write(pipe1[WRITE], concatenation, strlen(concatenation));
+
+        close(pipe1[WRITE]);
+
+        read(pipe2[READ], result_tmp, HASH_LEN);
+    }
     
-    char result_tmp[HASH_LEN+1];
-    strcpy(result_tmp,strtok(result," "));
-    snprintf(result,HASH_LEN+1,"%s",result_tmp); // HERE
-    
+    snprintf(result,HASH_LEN+1,"%s\0",result_tmp);
 }
 
 bool checkPassword(bank_account_t *bank_account, char * password){
@@ -39,3 +62,4 @@ bool checkPassword(bank_account_t *bank_account, char * password){
     generateHASH(bank_account->salt, password, tmp);
     return (strcmp(tmp,bank_account->hash) == 0);
 }
+

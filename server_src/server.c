@@ -3,6 +3,7 @@
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
 #include "request_queue.h"
+#include <time.h>
 
 //static bank_account_t admin; //is it necessary?
 
@@ -11,6 +12,7 @@ static request_queue_t* request_queue;
 int receive_requests();
 
 int main (int argc, char *argv []) {
+    srand(time(NULL));
 
     if(argc != 3) {
         printf("Wrong number of arguments.\n");
