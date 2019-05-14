@@ -13,7 +13,7 @@ void generateSALT(char *salt){
 void generateHASH(char * salt, char * password,char * result){
     char concatenation[strlen(salt)+strlen(password)+1];
 
-    sprintf(concatenation,"%s%s\0", password, salt);
+    sprintf(concatenation,"%s%s", password, salt);
 
     char* hash_command = malloc(MAX_BUFFER);
     sprintf(hash_command,"echo %s | sha256sum",concatenation);
@@ -30,7 +30,7 @@ void generateHASH(char * salt, char * password,char * result){
     
     char result_tmp[HASH_LEN+1];
     strcpy(result_tmp,strtok(result," "));
-    snprintf(result,HASH_LEN+1,"%s\0",result_tmp); // HERE
+    snprintf(result,HASH_LEN+1,"%s",result_tmp); // HERE
     
 }
 
