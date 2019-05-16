@@ -34,7 +34,7 @@ int main (int argc, char *argv []) {
     }
 
     //initalize request queue
-    request_queue = request_queue_init(nthr);
+    request_queue = request_queue_init(nthr,MAIN_THREAD_ID);
 
     //create threads (MISSING)
     init_e_counters();
@@ -96,7 +96,7 @@ int receive_requests() {
             continue;
         }
 
-        request_queue_push(request_queue,request);
+        request_queue_push(request_queue,request,MAIN_THREAD_ID);
         
     } while (!server_shutdown); //needs to check for valid request
 

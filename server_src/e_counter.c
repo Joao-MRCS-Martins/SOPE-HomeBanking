@@ -20,24 +20,26 @@ void init_e_counters() {
 void* start_e_counter(void* args) {
     e_counter_t* e_counter_info = (e_counter_t*) args;
     request_queue_t* request_queue = e_counter_info->request_queue;
-    // int id = e_counter_info->id; to be used later
+    int id = e_counter_info->id;
 
     char fifo_path [USER_FIFO_PATH_LEN];
     int rs;
     tlv_reply_t reply;
 
     while (!( server_shutdown && empty_request_queue(request_queue) )) {
-        request_queue_wait_for_request(request_queue);
+        request_queue_wait_for_request(request_queue,id,0);
 
         if (empty_request_queue(request_queue)) {
             break;
         }
 
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,0);
         pthread_mutex_lock(&queue_lock);        
 
         tlv_request_t request = get_request_queue_front(request_queue);
-        request_queue_pop(request_queue);
+        request_queue_pop(request_queue,id,request.value.header.pid);
 
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_PRODUCER,request.value.header.pid);
         pthread_mutex_unlock(&queue_lock);
 
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
@@ -46,7 +48,7 @@ void* start_e_counter(void* args) {
             continue; //failing to communicate with user, continues listening for requests
         }
 
-        process_request(&request,&reply);
+        process_request(&request,&reply,id);
         
         write(rs,&reply,sizeof(reply));
 
@@ -66,6 +68,7 @@ void* start_e_counter(void* args) {
 }
 
 int create_e_counters(request_queue_t* request_queue, int n_threads) {
+    
     pthread_mutex_init(&queue_lock,NULL);
 
     for (int i = 1; i <= n_threads; i++) {

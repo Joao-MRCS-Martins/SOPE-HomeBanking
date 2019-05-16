@@ -65,3 +65,21 @@ void log_sync_delay(uint32_t op_delay,int acc_id,int bank_id) {
     logSyncDelay(fd, bank_id, acc_id,op_delay);
     fclose(f);
 }
+
+void log_sync(int thread_id,sync_mech_op_t call_type, sync_role_t role_type, int sid) {
+    FILE * f = fopen(SERVER_LOGFILE,"a");
+    int fd = fileno(f);
+
+    logSyncMech(fd,thread_id,call_type,role_type,sid);
+
+    fclose(f);
+}
+
+void log_sync_sem(int thread_id,sync_mech_op_t call_type, sync_role_t role_type, int sid, int val) {
+    FILE * f = fopen(SERVER_LOGFILE,"a");
+    int fd = fileno(f);
+
+    logSyncMechSem(fd,thread_id,call_type,role_type,sid,val);
+
+    fclose(f);
+}

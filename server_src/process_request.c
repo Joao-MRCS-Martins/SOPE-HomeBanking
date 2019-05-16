@@ -26,8 +26,12 @@ void load_admin(bank_account_t *admin) {
     }
 }
 
-void create_account(tlv_request_t *req, tlv_reply_t *rep) {
+void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
+
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
     pthread_mutex_lock(&account_lock[req->value.header.account_id]);
+
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
     pthread_mutex_lock(&account_lock[req->value.create.account_id]);
     
     if(req->value.header.account_id != ADMIN_ACCOUNT_ID) {
@@ -52,18 +56,22 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep) {
         accounts[account->account_id] = account;
         rep->value.header.ret_code = RC_OK;
 
-        log_creat_acc(account,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+        log_creat_acc(account,id); 
     }
     else {
         printf("Account and/or password incorrect.\n");              
         rep->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
     pthread_mutex_unlock(&account_lock[req->value.header.account_id]);
+
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
     pthread_mutex_unlock(&account_lock[req->value.create.account_id]);
 }
 
-void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
+void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
 
     reply->value.shutdown.active_offices = 0; // error value (to be confirmed)
@@ -73,7 +81,7 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)) {
         usleep(request->value.header.op_delay_ms);
-        log_delay(request->value.header.op_delay_ms,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+        log_delay(request->value.header.op_delay_ms,id);
 
         int rq = open(SERVER_FIFO_PATH,O_RDONLY);
 
@@ -90,10 +98,12 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
 }
 
-void balance(tlv_request_t *request, tlv_reply_t *reply) {
+void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
 
     reply->value.balance.balance = 0; //error value (to be confirmed)
@@ -115,11 +125,15 @@ void balance(tlv_request_t *request, tlv_reply_t *reply) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
 }
 
-void transfer(tlv_request_t *request, tlv_reply_t *reply) {
+void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
     pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
 
     reply->value.transfer.balance = request->value.transfer.amount; //error value (to be confirmed)
@@ -157,38 +171,41 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;   
     }
 
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
     pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
 
 }
 
-void process_request(tlv_request_t *request, tlv_reply_t *reply) {
+void process_request(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
     show_request(*request);
-    log_request(request, MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+    log_request(request, id); 
     
     reply->type = request->type;
     reply->value.header.account_id = request->value.header.account_id;
     
     //enter critical section
     usleep(request->value.header.op_delay_ms);
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id); 
     
     switch(request->type) {
         case OP_CREATE_ACCOUNT:
-            create_account(request,reply);
+            create_account(request,reply,id);
             break;
 
         case OP_SHUTDOWN:
-            shutdown(request,reply);
+            shutdown(request,reply, id);
             break;
 
         case OP_BALANCE:
-            balance(request, reply);
+            balance(request, reply, id);
             break;
 
         case OP_TRANSFER:
-            transfer(request, reply);
+            transfer(request, reply, id);
             break;
             
         default:
@@ -203,7 +220,7 @@ void process_request(tlv_request_t *request, tlv_reply_t *reply) {
         reply->length = sizeof(reply->value);
     }
     
-    log_reply(reply, MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+    log_reply(reply, MAIN_THREAD_ID);
 }
 
 void clean_accounts() {
