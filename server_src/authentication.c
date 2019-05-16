@@ -16,7 +16,7 @@ void generateSALT(char *salt){
 void generateHASH(char * salt, char * password,char * result){
     char concatenation[strlen(salt)+strlen(password)+1];
 
-    char result_tmp[HASH_LEN+1];
+    char result_tmp[HASH_LEN+1] = "";
 
     sprintf(concatenation,"%s%s", password, salt);
 

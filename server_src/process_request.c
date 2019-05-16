@@ -11,14 +11,21 @@ static pthread_mutex_t account_lock[MAX_BANK_ACCOUNTS+1];
 
 
 void load_admin(bank_account_t *admin) {
-    //enter critical section ???
-    log_sync_delay(0,ADMIN_ACCOUNT_ID,MAIN_THREAD_ID);
-    accounts[0] = admin;
+
 
     //inialize account_lock mutex array
     for (int i = 0; i < MAX_BANK_ACCOUNTS+1; i++) {
         pthread_mutex_init(&account_lock[i],NULL);
     }
+
+    pthread_mutex_lock(&account_lock[ADMIN_ACCOUNT_ID]);
+    log_sync(MAIN_THREAD_ID,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,ADMIN_ACCOUNT_ID);
+
+    log_sync_delay(0,ADMIN_ACCOUNT_ID,MAIN_THREAD_ID);
+    accounts[0] = admin;
+
+    pthread_mutex_unlock(&account_lock[ADMIN_ACCOUNT_ID]);
+    log_sync(MAIN_THREAD_ID,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,ADMIN_ACCOUNT_ID);
 }
 
 void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
@@ -26,14 +33,14 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
     pthread_mutex_lock(&account_lock[req->value.header.account_id]);
     log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
     
-    usleep(request->value.header.op_delay_ms*THOUSAND); 
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id); 
+    usleep(req->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(req->value.header.op_delay_ms,req->value.header.account_id,id); 
     
     pthread_mutex_lock(&account_lock[req->value.create.account_id]);
     log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
     
-    usleep(request->value.header.op_delay_ms*THOUSAND); 
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
+    usleep(req->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(req->value.header.op_delay_ms,req->value.create.account_id,id);
     
     if(req->value.header.account_id != ADMIN_ACCOUNT_ID) {
         printf("Only admin can create accounts\n");
@@ -115,7 +122,9 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
     usleep(request->value.header.op_delay_ms*THOUSAND); 
     log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
-    reply->value.balance.balance = 0; //error value (to be confirmed)
+    printf("WHAT THE FUCK\n");
+
+    reply->value.balance.balance = 0; //error value 
     
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
         printf("Only clients can check account balance\n");
@@ -149,50 +158,51 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
     log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
 
     usleep(request->value.header.op_delay_ms*THOUSAND); 
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
+    log_sync_delay(request->value.header.op_delay_ms,request->value.transfer.account_id,id);
 
-    if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
-        printf("Only clients can transfer money\n");
-        reply->value.header.ret_code = RC_OP_NALLOW;
-    }
-    else if(accounts[request->value.header.account_id] == 0) {
+
+    if(accounts[request->value.header.account_id] == 0) {
         printf("Source account does not exist\n");
         reply->value.header.ret_code = RC_ID_NOT_FOUND;
         reply->value.transfer.balance = 0;
-        return;
-    }
-    else if(accounts[request->value.transfer.account_id] == 0) {
-        printf("Destination account does not exist\n");
-        reply->value.header.ret_code = RC_ID_NOT_FOUND;
-    }
-    else if(request->value.header.account_id == request->value.transfer.account_id) {
-        printf("Source and end account are the same.\n");
-        reply->value.header.ret_code = RC_SAME_ID;
-    }
-    else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
-       
-        if (accounts[request->value.header.account_id]->balance  <  (MIN_BALANCE + request->value.transfer.amount)) {
-            printf("The source account will be left with insufficient funds.\n");
-            reply->value.header.ret_code =  RC_NO_FUNDS;
-        }
-        else if((request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance) > MAX_BALANCE) {
-            printf("The end account will have excessive amount of money allowed.\n");
-            reply->value.header.ret_code = RC_TOO_HIGH;
-        }
-        else {
-            accounts[request->value.header.account_id]->balance -= request->value.transfer.amount;
-            accounts[request->value.transfer.account_id]->balance += request->value.transfer.amount;
-            reply->value.transfer.balance = accounts[request->value.header.account_id]->balance;
-        }
-
-        return;
     }
     else {
-        printf("Account and/or password incorrect.\n");
-        reply->value.header.ret_code = RC_LOGIN_FAIL;   
-    }
 
-    reply->value.transfer.balance = accounts[request->value.header.account_id]->balance; //error value 
+        reply->value.transfer.balance = accounts[request->value.header.account_id]->balance; //error value 
+        
+        if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
+            printf("Only clients can transfer money\n");
+            reply->value.header.ret_code = RC_OP_NALLOW;
+        }
+        else if(accounts[request->value.transfer.account_id] == 0) {
+            printf("Destination account does not exist\n");
+            reply->value.header.ret_code = RC_ID_NOT_FOUND;
+        }
+        else if(request->value.header.account_id == request->value.transfer.account_id) {
+            printf("Source and end account are the same.\n");
+            reply->value.header.ret_code = RC_SAME_ID;
+        }
+        else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
+        
+            if (accounts[request->value.header.account_id]->balance  <  (MIN_BALANCE + request->value.transfer.amount)) {
+                printf("The source account will be left with insufficient funds.\n");
+                reply->value.header.ret_code =  RC_NO_FUNDS;
+            }
+            else if((request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance) > MAX_BALANCE) {
+                printf("The end account will have excessive amount of money allowed.\n");
+                reply->value.header.ret_code = RC_TOO_HIGH;
+            }
+            else {
+                accounts[request->value.header.account_id]->balance -= request->value.transfer.amount;
+                accounts[request->value.transfer.account_id]->balance += request->value.transfer.amount;
+                reply->value.transfer.balance = accounts[request->value.header.account_id]->balance;
+            }
+        }
+        else {
+            printf("Account and/or password incorrect.\n");
+            reply->value.header.ret_code = RC_LOGIN_FAIL;   
+        }
+    }
 
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
     log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);

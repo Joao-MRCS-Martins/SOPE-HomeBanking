@@ -8,8 +8,8 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
     *nthr = atoi(args[1]);
     char pass[MAX_PASSWORD_LEN+1];
 
-    if(*nthr < 0 || *nthr > MAX_BANK_OFFICES) {
-        printf("Number of e-counters must be in range: 0-%d\n",MAX_BANK_OFFICES);
+    if(*nthr < 1 || *nthr > MAX_BANK_OFFICES) {
+        printf("Number of e-counters must be in range: 1-%d\n",MAX_BANK_OFFICES);
         return FAILURE;
     }
 

@@ -14,7 +14,8 @@ static pthread_t e_counters[MAX_BANK_OFFICES];
 static pthread_mutex_t queue_lock;
 
 void init_e_counters() {
-    memset(&e_counters,0,sizeof(e_counters)); 
+    memset(&e_counters,0,sizeof(e_counters));
+    memset(&queue_lock,0,sizeof(pthread_mutex_t));
 }
 
 void* start_e_counter(void* args) {
@@ -25,6 +26,7 @@ void* start_e_counter(void* args) {
     char fifo_path [USER_FIFO_PATH_LEN];
     int rs;
     tlv_reply_t reply;
+    memset(&reply,0,sizeof(tlv_reply_t));
 
     while (!( server_shutdown && empty_request_queue(request_queue) )) {
         request_queue_wait_for_request(request_queue,id,0);
