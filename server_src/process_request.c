@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <pthread.h>
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
 /*
@@ -11,14 +12,23 @@ semaphores
 //CANT FORGET TO FREE MEMORY IN THE END (SHUTDOWN PART)
 static bank_account_t* accounts[MAX_BANK_ACCOUNTS+1]; 
 
+static pthread_mutex_t account_lock[MAX_BANK_ACCOUNTS+1];
+
 
 void load_admin(bank_account_t *admin) {
     //enter critical section ???
     log_sync_delay(0,ADMIN_ACCOUNT_ID,MAIN_THREAD_ID); // think bank_id is correct?
     accounts[0] = admin;
+
+    //inialize account_lock mutex array
+    for (int i = 0; i < MAX_BANK_ACCOUNTS+1; i++) {
+        pthread_mutex_init(&account_lock[i],NULL);
+    }
 }
 
 void create_account(tlv_request_t *req, tlv_reply_t *rep) {
+    pthread_mutex_lock(&account_lock[req->value.header.account_id]);
+    pthread_mutex_lock(&account_lock[req->value.create.account_id]);
     
     if(req->value.header.account_id != ADMIN_ACCOUNT_ID) {
         printf("Only admin can create accounts\n");
@@ -48,9 +58,13 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep) {
         printf("Account and/or password incorrect.\n");              
         rep->value.header.ret_code = RC_LOGIN_FAIL;
     }
+
+    pthread_mutex_unlock(&account_lock[req->value.header.account_id]);
+    pthread_mutex_unlock(&account_lock[req->value.create.account_id]);
 }
 
 void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
+    pthread_mutex_lock(&account_lock[request->value.header.account_id]);
 
     reply->value.shutdown.active_offices = 0; // error value (to be confirmed)
     if(request->value.header.account_id != ADMIN_ACCOUNT_ID) {
@@ -75,9 +89,13 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
         printf("Account and/or password incorrect.\n");
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
+
+    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
 }
 
 void balance(tlv_request_t *request, tlv_reply_t *reply) {
+    pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+
     reply->value.balance.balance = 0; //error value (to be confirmed)
     
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
@@ -96,9 +114,14 @@ void balance(tlv_request_t *request, tlv_reply_t *reply) {
         printf("Account and/or password incorrect.\n");
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
+
+    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
 }
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply) {
+    pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+    pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
+
     reply->value.transfer.balance = request->value.transfer.amount; //error value (to be confirmed)
 
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
@@ -134,6 +157,8 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;   
     }
 
+    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+    pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
 
 }
 
@@ -186,5 +211,6 @@ void clean_accounts() {
         if(accounts[i] != 0) {
             free(accounts[i]);
         }
+        pthread_mutex_destroy(&account_lock[i]);
     } 
 }
