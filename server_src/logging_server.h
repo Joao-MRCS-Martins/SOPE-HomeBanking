@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-void open_server(int bank_id);
-void close_server(int bank_id);
+void open_office(int bank_id);
+void close_office(int bank_id);
 void log_reply(tlv_reply_t *reply, int bank_id);
 void log_request(tlv_request_t *request, int bank_id);
 void log_creat_acc(bank_account_t *account, int bank_id);

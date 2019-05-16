@@ -49,7 +49,7 @@ int input_parser(char* args[],tlv_request_t *req) {
 
 int fill_header(char* args[],req_header_t *header) {
     uint32_t acc_id = atoi(args[1]);
-    if(acc_id < 0 || acc_id > MAX_BANK_ACCOUNTS) {
+    if(acc_id > MAX_BANK_ACCOUNTS) {
         printf("Account ID is invalid\n");
         return FAILURE;
     }

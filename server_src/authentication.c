@@ -18,7 +18,7 @@ void generateHASH(char * salt, char * password,char * result){
 
     char result_tmp[HASH_LEN+1];
 
-    sprintf(concatenation,"%s%s\0", password, salt);
+    sprintf(concatenation,"%s%s", password, salt);
 
     int pipe1[2];
 
@@ -54,7 +54,7 @@ void generateHASH(char * salt, char * password,char * result){
         read(pipe2[READ], result_tmp, HASH_LEN);
     }
     
-    snprintf(result,HASH_LEN+1,"%s\0",result_tmp);
+    snprintf(result,HASH_LEN+1,"%s",result_tmp);
 }
 
 bool checkPassword(bank_account_t *bank_account, char * password){

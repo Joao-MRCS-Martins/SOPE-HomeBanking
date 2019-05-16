@@ -1,14 +1,13 @@
 CC = gcc
 RM=rm -f
 
-CFLAGS=-g -Wall -I. -D_GNU_SOURCE
-LDFLAGS=-g -pthread
+CFLAGS=-g -Wall -Werror -Wextra -I. -D_GNU_SOURCE
+LDFLAGS=-g -pthread -lrt
 LDLIBS=
 
 #Depend file stuff
 DEPFILE=.depend
 DEPTEXT='\#MAKE .DEPEND FILE'
-
 #Defining sources and objects
 SRCS=../auxiliary_code/log.c ../auxiliary_code/show_info.c $(wildcard *.c)
 OBJS=$(subst .c,.o,$(SRCS))
