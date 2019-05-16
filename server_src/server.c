@@ -37,8 +37,6 @@ int main (int argc, char *argv []) {
     request_queue = request_queue_init(nthr);
 
     //create threads (MISSING)
-    init_e_counters(0);
-
     create_e_counters(request_queue,nthr);
 
     //logBankOfficeOpen
