@@ -38,3 +38,5 @@
 #define MAX_BUFFER 256
 #define SUCCESS 0
 #define FAILURE -1
+
+#define THOUSAND 1000

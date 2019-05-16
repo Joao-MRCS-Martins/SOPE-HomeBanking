@@ -79,6 +79,7 @@ int create_e_counters(request_queue_t* request_queue, int n_threads) {
         pthread_t tid;
 
         pthread_create(&tid,NULL,start_e_counter,(void*) new_e_counter);
+        log_open_office(i);
 
         //add the thread to the array to join later
         e_counters[i-1] = tid;

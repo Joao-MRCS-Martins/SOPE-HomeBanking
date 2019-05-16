@@ -1,7 +1,6 @@
-#include "../auxiliary_code/sope.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include "../auxiliary_code/sope.h"
+//#include <stdlib.h>
+//#include <string.h>
 #include <sys/stat.h>
 #include "authentication.h"
 #include "logging_server.h"
