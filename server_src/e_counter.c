@@ -64,6 +64,8 @@ void* start_e_counter(void* args) {
 
     free(args);
 
+    log_close_office(id);
+
     pthread_exit(NULL);
 }
 

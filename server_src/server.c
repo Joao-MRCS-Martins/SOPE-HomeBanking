@@ -97,7 +97,7 @@ int receive_requests() {
 
         request_queue_push(request_queue,request,MAIN_THREAD_ID);
         
-    } while (!server_shutdown); //needs to check for valid request
+    } while (!server_shutdown);
 
     wait_for_e_counters();
 
