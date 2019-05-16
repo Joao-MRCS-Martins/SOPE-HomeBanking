@@ -1,20 +1,15 @@
 #include <fcntl.h>
 #include "process_request.h"
 #include "../auxiliary_code/show_info.h"
-/*
-shared memory block
-array of bank accounts
-e-counters
-semaphores
-*/
+//#include <unistd.h>
 
-//CANT FORGET TO FREE MEMORY IN THE END (SHUTDOWN PART)
+
 static bank_account_t* accounts[MAX_BANK_ACCOUNTS+1]; 
 
 
 void load_admin(bank_account_t *admin) {
     //enter critical section ???
-    log_sync_delay(0,ADMIN_ACCOUNT_ID,MAIN_THREAD_ID); // think bank_id is correct?
+    log_sync_delay(0,ADMIN_ACCOUNT_ID,MAIN_THREAD_ID);
     accounts[0] = admin;
 }
 
@@ -52,17 +47,19 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep) {
 
 void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
 
-    reply->value.shutdown.active_offices = 0; // error value (to be confirmed)
+    reply->value.shutdown.active_offices = 0; // error value 
     if(request->value.header.account_id != ADMIN_ACCOUNT_ID) {
         printf("Only admin can shutdown the system\n");
         reply->value.header.ret_code = RC_OP_NALLOW;
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)) {
-        usleep(request->value.header.op_delay_ms);
-        log_delay(request->value.header.op_delay_ms,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
 
         int rq = open(SERVER_FIFO_PATH,O_RDONLY);
 
+        //operation delay right before closing fifo for writing
+        usleep(request->value.header.op_delay_ms*THOUSAND);
+        log_delay(request->value.header.op_delay_ms,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+        
         if(fchmod(rq, READ_ALL) == 0) {
             reply->value.shutdown.active_offices = 3; // wrong value - must be active threads number
             reply->value.header.ret_code =  RC_OK;
@@ -78,7 +75,7 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply) {
 }
 
 void balance(tlv_request_t *request, tlv_reply_t *reply) {
-    reply->value.balance.balance = 0; //error value (to be confirmed)
+    reply->value.balance.balance = 0; //error value
     
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
         printf("Only clients can check account balance\n");
@@ -99,14 +96,19 @@ void balance(tlv_request_t *request, tlv_reply_t *reply) {
 }
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply) {
-    reply->value.transfer.balance = request->value.transfer.amount; //error value (to be confirmed)
 
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
         printf("Only clients can transfer money\n");
         reply->value.header.ret_code = RC_OP_NALLOW;
     }
-    else if(accounts[request->value.transfer.account_id] == 0 || accounts[request->value.header.account_id] == 0) {
-        printf("Source or end account does not exist\n");
+    else if(accounts[request->value.header.account_id] == 0) {
+        printf("Source account does not exist\n");
+        reply->value.header.ret_code = RC_ID_NOT_FOUND;
+        reply->value.transfer.balance = 0;
+        return;
+    }
+    else if(accounts[request->value.transfer.account_id] == 0) {
+        printf("Destination account does not exist\n");
         reply->value.header.ret_code = RC_ID_NOT_FOUND;
     }
     else if(request->value.header.account_id == request->value.transfer.account_id) {
@@ -114,12 +116,12 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply) {
         reply->value.header.ret_code = RC_SAME_ID;
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
-                
-        if (accounts[request->value.header.account_id]->balance - request->value.transfer.amount <  MIN_BALANCE) {
+       
+        if (accounts[request->value.header.account_id]->balance  <  (MIN_BALANCE + request->value.transfer.amount)) {
             printf("The source account will be left with insufficient funds.\n");
             reply->value.header.ret_code =  RC_NO_FUNDS;
         }
-        else if(request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance > MAX_BALANCE) {
+        else if((request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance) > MAX_BALANCE) {
             printf("The end account will have excessive amount of money allowed.\n");
             reply->value.header.ret_code = RC_TOO_HIGH;
         }
@@ -128,12 +130,15 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply) {
             accounts[request->value.transfer.account_id]->balance += request->value.transfer.amount;
             reply->value.transfer.balance = accounts[request->value.header.account_id]->balance;
         }
+
+        return;
     }
     else {
         printf("Account and/or password incorrect.\n");
         reply->value.header.ret_code = RC_LOGIN_FAIL;   
     }
 
+    reply->value.transfer.balance = accounts[request->value.header.account_id]->balance; //error value
 
 }
 
@@ -146,7 +151,8 @@ void process_request(tlv_request_t *request, tlv_reply_t *reply) {
     reply->value.header.account_id = request->value.header.account_id;
     
     //enter critical section
-    usleep(request->value.header.op_delay_ms);
+    usleep(request->value.header.op_delay_ms*THOUSAND); // THIS CALL MUST BE IN EACH OP AFTER GAINING EXCLUSIVE ACCESS TO THE ACCOUNTS
+    
     log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
     
     switch(request->type) {

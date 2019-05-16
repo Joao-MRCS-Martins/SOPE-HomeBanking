@@ -5,6 +5,7 @@
 #include "process_request.h"
 #include "request_queue.h"
 #include "../auxiliary_code/constants.h"
+#include "e_counter.h"
 
 static pthread_t e_counters[MAX_BANK_OFFICES];
 
@@ -53,7 +54,7 @@ void* start_e_counter(void* args) {
 
     }
 
-    //close_office(e_counters[gettid()]); TO FIX
+    //log_close_office(e_counters[gettid()]); TO FIX
     pthread_exit(NULL);
 }
 
@@ -77,8 +78,7 @@ int create_e_counters(request_queue_t* request_queue, int n_threads) {
     for (int i = 1; i <= n_threads; i++) {
 
         create_e_counter(request_queue);
-        printf("SOMETHING\n");
-        open_office(i);
+        log_open_office(i);
     }
 
     return 0;

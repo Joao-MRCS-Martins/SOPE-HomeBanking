@@ -6,7 +6,6 @@
 #include "e_counter.h"
 #include <time.h>
 
-//static bank_account_t admin; //is it necessary?
 
 extern bool server_shutdown;
 
@@ -36,13 +35,13 @@ int main (int argc, char *argv []) {
     //initalize request queue
     request_queue = request_queue_init(nthr);
 
-    //create threads (MISSING)
+    //create threads
     init_e_counters(0);
 
     create_e_counters(request_queue,nthr);
 
     //logBankOfficeOpen
-    open_office(ADMIN_ACCOUNT_ID);
+    log_open_office(ADMIN_ACCOUNT_ID);
 
     //load admin into bank accounts
     load_admin(admin);
@@ -66,13 +65,13 @@ int main (int argc, char *argv []) {
     clean_accounts();
 
     if(unlink(SERVER_FIFO_PATH) < 0) {
-        printf("Error when destroying FIFO '%s'\n",SERVER_FIFO_PATH);
+        printf("Error when destroying secure channel '%s'\n",SERVER_FIFO_PATH);
         return FAILURE;
     }
     else
-        printf("FIFO '%s' has been destroyed\n",SERVER_FIFO_PATH);
+        printf("Server channel '%s' has been destroyed\n",SERVER_FIFO_PATH);
     
-    close_office(ADMIN_ACCOUNT_ID);
+    log_close_office(ADMIN_ACCOUNT_ID);
 
     request_queue_delete(request_queue);
 
@@ -92,7 +91,7 @@ int receive_requests() {
     
     do
     {
-        if(read(rq, &request, sizeof(request)) == 0) {
+        if(read(rq, &request, sizeof(request)) == 0) { // REWORK THIS STEP
             usleep(500);
             continue;
         }

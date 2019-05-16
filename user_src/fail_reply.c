@@ -12,17 +12,16 @@ void fail_reply(tlv_reply_t * rep, tlv_request_t *req, ret_code_t rc) {
             rep->length = sizeof(rep->value.header);
             break;
         case OP_BALANCE:
-            rep->value.balance.balance = 0; //error value (to be confirmed)
+            rep->value.balance.balance = 0; //error value
             break;
         case OP_TRANSFER:
-            rep->value.transfer.balance = req->value.transfer.amount; //error value (to be confirmed)
+            rep->value.transfer.balance = req->value.transfer.amount; //error value
             break;
         case OP_SHUTDOWN:
-            rep->value.shutdown.active_offices = 0; //error value (to be confirmed)
+            rep->value.shutdown.active_offices = 0; //error value
             break;
         default:
-            //do nothing (never reached)
+            //do nothing
             break;
-
     }
 }

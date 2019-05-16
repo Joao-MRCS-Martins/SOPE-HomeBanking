@@ -1,5 +1,5 @@
 #include "show_info.h"
-#include <stdio.h>
+//#include <stdio.h>
 
 void show_usage_user() {
     printf("Usage: ./user <acc_ID> <acc_pass> <op_delay_ms> <op_code> <op_args>\n");

@@ -1,12 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <signal.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <unistd.h>
+//#include <errno.h>
+//#include <signal.h>
 #include <sys/file.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #include <sys/stat.h>
-#include <string.h>
+//#include <string.h>
 
 #include "logging_user.h"
 #include "user_parser.h"
@@ -92,10 +92,10 @@ int main(int argc, char *argv[]) {
     else {
 
         if(unlink(fifo_path) <0) {
-            printf("Error when destroying FIFO '%s'\n",fifo_path);
+            printf("Error when destroying user channel '%s'\n",fifo_path);
             return FAILURE;
         }
-        printf("FIFO '%s' has been destroyed\n",fifo_path);
+        printf("User channel '%s' has been destroyed\n",fifo_path);
         return SUCCESS;
     }
 }
