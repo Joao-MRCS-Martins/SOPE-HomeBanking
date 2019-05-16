@@ -83,7 +83,7 @@ int request_queue_pop(request_queue_t* queue, int thread_id, int pid) {
         }
 
         sem_getvalue(&queue->request_slots,&sem_val);
-        log_sync_sem(thread_id, SYNC_OP_SEM_POST,SYNC_ROLE_PRODUCER,pid,sem_val);
+        log_sync_sem(thread_id, SYNC_OP_SEM_POST,SYNC_ROLE_CONSUMER,pid,sem_val);
         sem_post(&queue->request_slots);
 
 
@@ -106,7 +106,7 @@ void request_queue_delete(request_queue_t* queue) {
 void request_queue_wait_for_request(request_queue_t* queue, int thread_id,int pid) {
     int sem_val;
     sem_getvalue(&queue->request_slots,&sem_val);
-    log_sync_sem(thread_id, SYNC_OP_SEM_WAIT,SYNC_ROLE_PRODUCER,pid,sem_val);
+    log_sync_sem(thread_id, SYNC_OP_SEM_WAIT,SYNC_ROLE_CONSUMER,pid,sem_val);
 
     sem_wait(&queue->requests_waiting);
 }

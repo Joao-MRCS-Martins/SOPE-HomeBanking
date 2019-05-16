@@ -23,11 +23,17 @@ void load_admin(bank_account_t *admin) {
 
 void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
 
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
     pthread_mutex_lock(&account_lock[req->value.header.account_id]);
-
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
+    
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id); 
+    
     pthread_mutex_lock(&account_lock[req->value.create.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
+    
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
     
     if(req->value.header.account_id != ADMIN_ACCOUNT_ID) {
         printf("Only admin can create accounts\n");
@@ -58,16 +64,19 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
         rep->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
     pthread_mutex_unlock(&account_lock[req->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
     pthread_mutex_unlock(&account_lock[req->value.create.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
 }
 
 void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
     reply->value.shutdown.active_offices = 0; // error value 
     if(request->value.header.account_id != ADMIN_ACCOUNT_ID) {
@@ -80,7 +89,7 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
         //operation delay right before closing fifo for writing
         usleep(request->value.header.op_delay_ms*THOUSAND);
-        log_delay(request->value.header.op_delay_ms,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
+        log_delay(request->value.header.op_delay_ms,id);
         
         if(fchmod(rq, READ_ALL) == 0) {
             reply->value.shutdown.active_offices = 3; // wrong value - must be active threads number
@@ -95,13 +104,16 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
 }
 
 void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
     reply->value.balance.balance = 0; //error value (to be confirmed)
     
@@ -122,18 +134,22 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
 }
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
     pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
 
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
+
     pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
 
-    reply->value.transfer.balance = request->value.transfer.amount; //error value (to be confirmed)
+    usleep(request->value.header.op_delay_ms*THOUSAND); 
+    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
         printf("Only clients can transfer money\n");
@@ -176,11 +192,13 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
         reply->value.header.ret_code = RC_LOGIN_FAIL;   
     }
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
-    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+    reply->value.transfer.balance = accounts[request->value.header.account_id]->balance; //error value 
 
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+
     pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
+    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
 
 }
 
@@ -192,10 +210,6 @@ void process_request(tlv_request_t *request, tlv_reply_t *reply, int id) {
     reply->type = request->type;
     reply->value.header.account_id = request->value.header.account_id;
     
-    //enter critical section
-    usleep(request->value.header.op_delay_ms*THOUSAND); // THIS CALL MUST BE IN EACH OP AFTER GAINING EXCLUSIVE ACCESS TO THE ACCOUNTS
-    
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,MAIN_THREAD_ID); // TO BE ALTERED, MUST BE THREAD ID
     
     switch(request->type) {
         case OP_CREATE_ACCOUNT:
