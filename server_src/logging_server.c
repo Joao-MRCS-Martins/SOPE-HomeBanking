@@ -1,7 +1,7 @@
 #include "logging_server.h"
 
-void open_server(int bank_id){
-    FILE* f = fopen(SERVER_LOGFILE, "w");
+void open_office(int bank_id){
+    FILE* f = fopen(SERVER_LOGFILE, "a");
     int fd = fileno(f);
     pthread_t tid = pthread_self();
 
@@ -11,7 +11,7 @@ void open_server(int bank_id){
     fclose(f);
 }
 
-void close_server(int bank_id){
+void close_office(int bank_id){
     FILE* f = fopen(SERVER_LOGFILE, "a");
     int fd = fileno(f);
     pthread_t tid = pthread_self();

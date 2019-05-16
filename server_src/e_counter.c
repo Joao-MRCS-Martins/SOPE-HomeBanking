@@ -1,3 +1,4 @@
+#include <sys/types.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <fcntl.h>
@@ -52,6 +53,7 @@ void* start_e_counter(void* args) {
 
     }
 
+    //close_office(e_counters[gettid()]); TO FIX
     pthread_exit(NULL);
 }
 
@@ -62,7 +64,7 @@ int create_e_counter(request_queue_t* request_queue) {
     
     for (int i = 0; i < MAX_BANK_OFFICES; i++) {
         if (e_counters[i] != 0) {
-            e_counters[i] = tid;
+            e_counters[i] = tid; // not pthread_t but int (office ID)
         }
     }
 
@@ -72,12 +74,11 @@ int create_e_counter(request_queue_t* request_queue) {
 int create_e_counters(request_queue_t* request_queue, int n_threads) {
     pthread_mutex_init(&queue_lock,NULL);
 
-    for (int i = 0; i < n_threads; i++) {
-        if (i >= MAX_BANK_OFFICES) {
-            break;
-        }
+    for (int i = 1; i <= n_threads; i++) {
 
         create_e_counter(request_queue);
+        printf("SOMETHING\n");
+        open_office(i);
     }
 
     return 0;

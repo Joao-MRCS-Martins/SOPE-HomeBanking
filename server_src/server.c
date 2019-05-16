@@ -42,7 +42,7 @@ int main (int argc, char *argv []) {
     create_e_counters(request_queue,nthr);
 
     //logBankOfficeOpen
-    open_server(ADMIN_ACCOUNT_ID);
+    open_office(ADMIN_ACCOUNT_ID);
 
     //load admin into bank accounts
     load_admin(admin);
@@ -72,7 +72,7 @@ int main (int argc, char *argv []) {
     else
         printf("FIFO '%s' has been destroyed\n",SERVER_FIFO_PATH);
     
-    close_server(ADMIN_ACCOUNT_ID);
+    close_office(ADMIN_ACCOUNT_ID);
 
     request_queue_delete(request_queue);
 
