@@ -99,6 +99,8 @@ int receive_requests() {
         
     } while (!server_shutdown); //needs to check for valid request
 
+    wait_for_e_counters();
+
     close(rq);
     
     return SUCCESS;

@@ -14,4 +14,6 @@ void* start_e_counter(void* args);
 
 int create_e_counters(request_queue_t* request_queue, int n_threads);
 
+int wait_for_e_counters();
+
 #endif
