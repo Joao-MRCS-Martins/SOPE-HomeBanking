@@ -6,6 +6,8 @@ request_queue_t* request_queue_init(int request_slots) {
 
     queue->front = NULL;
     queue->rear = NULL;
+    queue->thread_number = request_slots; 
+
     sem_init(&queue->request_slots,SHARED,request_slots);
     sem_init(&queue->requests_waiting,SHARED,0);
 
@@ -90,3 +92,9 @@ void request_queue_wait_for_request(request_queue_t* queue) {
     sem_wait(&queue->requests_waiting);
 }
 
+
+void unlock_threads(request_queue_t* queue) {
+    for (int i = 0; i < queue->thread_number; i++) {
+        sem_post(&queue->requests_waiting);
+    }
+}

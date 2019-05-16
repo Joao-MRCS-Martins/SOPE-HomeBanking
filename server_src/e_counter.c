@@ -13,6 +13,10 @@ static pthread_t e_counters[MAX_BANK_OFFICES];
 
 static pthread_mutex_t queue_lock;
 
+void init_e_counters() {
+    memset(&e_counters,0,sizeof(e_counters)); 
+}
+
 void* start_e_counter(void* args) {
     e_counter_t* e_counter_info = (e_counter_t*) args;
     request_queue_t* request_queue = e_counter_info->request_queue;
@@ -24,6 +28,10 @@ void* start_e_counter(void* args) {
 
     while (!( server_shutdown && empty_request_queue(request_queue) )) {
         request_queue_wait_for_request(request_queue);
+
+        if (empty_request_queue(request_queue)) {
+            break;
+        }
 
         pthread_mutex_lock(&queue_lock);        
 
@@ -47,7 +55,9 @@ void* start_e_counter(void* args) {
         if (request.type == OP_SHUTDOWN && reply.value.header.ret_code == RC_OK ) {
             server_shutdown = true;
         }
-
+        if (server_shutdown && empty_request_queue(request_queue)) {
+            unlock_threads(request_queue);
+        }
     }
 
     free(args);
@@ -75,7 +85,11 @@ int create_e_counters(request_queue_t* request_queue, int n_threads) {
 }
 
 int wait_for_e_counters() {
-    for (int i = 0; i < MAX_BANK_OFFICES; i++) {
+   for (int i = 0; i < MAX_BANK_OFFICES; i++) {
+       if (e_counters[i] == 0) {
+           break;
+       }
+
         pthread_join(e_counters[i],NULL);
     }
 

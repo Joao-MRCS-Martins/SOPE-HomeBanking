@@ -8,7 +8,7 @@ typedef struct e_counter {
     request_queue_t* request_queue;
 } e_counter_t;
 
-void init_e_counters(pthread_t main_tid);
+void init_e_counters();
 
 void* start_e_counter(void* args);
 

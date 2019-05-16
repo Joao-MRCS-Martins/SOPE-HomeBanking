@@ -20,6 +20,7 @@ typedef struct {
     node_t* rear;   
     sem_t request_slots;
     sem_t requests_waiting;
+    int thread_number;
 } request_queue_t;
 
 
@@ -40,6 +41,9 @@ tlv_request_t get_request_queue_front(request_queue_t* queue);
 
 void request_queue_delete(request_queue_t* queue);
 
+
 void request_queue_wait_for_request(request_queue_t* queue);
+
+void unlock_threads(request_queue_t* queue);
 
 #endif
