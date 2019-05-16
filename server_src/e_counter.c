@@ -49,46 +49,20 @@ void* start_e_counter(void* args) {
 
     }
 
-<<<<<<< HEAD
     free(args);
 
     pthread_exit(NULL);
-=======
-    //close_office(e_counters[gettid()]); TO FIX
-    pthread_exit(NULL);
-}
-
-int create_e_counter(request_queue_t* request_queue) {
-    pthread_t tid;
-
-    pthread_create(&tid,NULL,start_e_counter,(void*) request_queue);
-    
-    for (int i = 0; i < MAX_BANK_OFFICES; i++) {
-        if (e_counters[i] != 0) {
-            e_counters[i] = tid; // not pthread_t but int (office ID)
-        }
-    }
-
-    return 0;
->>>>>>> 77888f878bae0668a348f5f06961ca0e1c6aa5ad
 }
 
 int create_e_counters(request_queue_t* request_queue, int n_threads) {
     pthread_mutex_init(&queue_lock,NULL);
 
     for (int i = 1; i <= n_threads; i++) {
-<<<<<<< HEAD
          e_counter_t* new_e_counter = malloc(sizeof(e_counter_t));
          new_e_counter->id = i;
          new_e_counter->request_queue = request_queue;
 
         create_e_counter(new_e_counter);
-=======
-
-        create_e_counter(request_queue);
-        printf("SOMETHING\n");
-        open_office(i);
->>>>>>> 77888f878bae0668a348f5f06961ca0e1c6aa5ad
     }
 
     return 0;
