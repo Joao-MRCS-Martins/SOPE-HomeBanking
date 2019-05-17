@@ -45,9 +45,20 @@ void* start_e_counter(void* args) {
         pthread_mutex_unlock(&queue_lock);
 
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
-        rs = open(fifo_path,O_WRONLY);
-        if(rs == -1) {
-            continue; //failing to communicate with user, continues listening for requests
+        
+        time_t begin;
+        time(&begin);
+
+        do
+        {
+            rs = open(fifo_path,O_WRONLY);
+            if(rs != -1) {
+                break; //failing to communicate with user, continues listening for requests
+            }
+        } while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS);
+
+        if(rs == -1){
+            continue;
         }
 
         process_request(&request,&reply,id);

@@ -18,7 +18,7 @@ int input_parser(char* args[],bank_account_t * admin, int* nthr) {
         return FAILURE;
     }
 
-    sprintf(pass,strtok(args[2]," "));
+    sprintf(pass, "%s", strtok(args[2]," "));
     if(strtok(NULL," ") != NULL) {
         printf("Password can't contain spaces.\n");
         return FAILURE;

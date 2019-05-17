@@ -72,7 +72,7 @@ int fill_header(char* args[],req_header_t *header) {
 
     header->pid = getpid();
     header->account_id = acc_id;
-    sprintf(header->password,args[2]);
+    sprintf(header->password, "%s", args[2]);
     header->op_delay_ms = op_delay;
 
     return SUCCESS;
@@ -90,7 +90,7 @@ int fill_value(char* args,req_value_t *value, op_type_t type) {
         return FAILURE;
     }
 
-    sprintf(quant_tok,strtok(NULL," "));
+    sprintf(quant_tok, "%s", strtok(NULL," "));
         if(strcmp(quant_tok,"") == 0) {
             printf("Missing operation arguments.\n");
             return FAILURE;
@@ -107,7 +107,7 @@ int fill_value(char* args,req_value_t *value, op_type_t type) {
         value->create.account_id = acc_id;
         value->create.balance = quantity;
 
-        sprintf(value->create.password,strtok(NULL," "));
+        sprintf(value->create.password, "%s", strtok(NULL," "));
         if(strlen(value->create.password) < MIN_PASSWORD_LEN || strlen(value->create.password) > MAX_PASSWORD_LEN) {
             printf("Password must be between 8 and 20 characters long.\n");
             return FAILURE;

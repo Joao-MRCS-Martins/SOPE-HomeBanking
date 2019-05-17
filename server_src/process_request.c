@@ -122,8 +122,6 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
     usleep(request->value.header.op_delay_ms*THOUSAND); 
     log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
-    printf("WHAT THE FUCK\n");
-
     reply->value.balance.balance = 0; //error value 
     
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
