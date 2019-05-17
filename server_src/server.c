@@ -82,26 +82,22 @@ int receive_requests() {
     //receive user requests
     int rq;
     tlv_request_t request;
-    memset(&request,0,sizeof(tlv_request_t));
-    
-    if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
-        return FAILURE;
-    }    
+    memset(&request,0,sizeof(tlv_request_t));   
     
     do
     {
-        if(read(rq, &request, sizeof(request)) == 0) { // REWORK THIS STEP
-            usleep(500);
+        if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
             continue;
         }
 
-        request_queue_push(request_queue,request,MAIN_THREAD_ID);
-        
+        if(read(rq, &request, sizeof(request)) > 0) {
+            request_queue_push(request_queue,request,MAIN_THREAD_ID);
+        }
+
+        close(rq);
     } while (!server_shutdown);
 
     wait_for_e_counters();
-
-    close(rq);
     
     return SUCCESS;
 }

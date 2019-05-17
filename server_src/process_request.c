@@ -43,12 +43,10 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
     log_sync_delay(req->value.header.op_delay_ms,req->value.create.account_id,id);
     
     if(req->value.header.account_id != ADMIN_ACCOUNT_ID) {
-        printf("Only admin can create accounts\n");
         rep->value.header.ret_code = RC_OP_NALLOW;
     }
     else if(checkPassword(accounts[req->value.header.account_id], req->value.header.password)){
         if(accounts[req->value.create.account_id] != 0) {
-            printf("Account already exists\n");
             rep->value.header.ret_code = RC_ID_IN_USE;
             return;
         }
@@ -67,7 +65,6 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
         log_creat_acc(account,id); 
     }
     else {
-        printf("Account and/or password incorrect.\n");              
         rep->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
@@ -87,7 +84,6 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
     reply->value.shutdown.active_offices = 0; // error value 
     if(request->value.header.account_id != ADMIN_ACCOUNT_ID) {
-        printf("Only admin can shutdown the system\n");
         reply->value.header.ret_code = RC_OP_NALLOW;
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)) {
@@ -107,7 +103,6 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
         }
     }
     else {
-        printf("Account and/or password incorrect.\n");
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
@@ -125,11 +120,9 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
     reply->value.balance.balance = 0; //error value 
     
     if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
-        printf("Only clients can check account balance\n");
         reply->value.header.ret_code = RC_OP_NALLOW;
     }
     else if(accounts[request->value.header.account_id] == 0) {
-        printf("Account not found\n");
         reply->value.header.ret_code = RC_ID_NOT_FOUND;
     }
     else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)) {
@@ -137,7 +130,6 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
         reply->value.header.ret_code = RC_OK;
     }
     else {
-        printf("Account and/or password incorrect.\n");
         reply->value.header.ret_code = RC_LOGIN_FAIL;
     }
 
@@ -160,7 +152,6 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
 
     if(accounts[request->value.header.account_id] == 0) {
-        printf("Source account does not exist\n");
         reply->value.header.ret_code = RC_ID_NOT_FOUND;
         reply->value.transfer.balance = 0;
     }
@@ -169,25 +160,20 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
         reply->value.transfer.balance = accounts[request->value.header.account_id]->balance; //error value 
         
         if(request->value.header.account_id == ADMIN_ACCOUNT_ID) {
-            printf("Only clients can transfer money\n");
             reply->value.header.ret_code = RC_OP_NALLOW;
         }
         else if(accounts[request->value.transfer.account_id] == 0) {
-            printf("Destination account does not exist\n");
             reply->value.header.ret_code = RC_ID_NOT_FOUND;
         }
         else if(request->value.header.account_id == request->value.transfer.account_id) {
-            printf("Source and end account are the same.\n");
             reply->value.header.ret_code = RC_SAME_ID;
         }
         else if(checkPassword(accounts[request->value.header.account_id], request->value.header.password)){
         
             if (accounts[request->value.header.account_id]->balance  <  (MIN_BALANCE + request->value.transfer.amount)) {
-                printf("The source account will be left with insufficient funds.\n");
                 reply->value.header.ret_code =  RC_NO_FUNDS;
             }
             else if((request->value.transfer.amount + accounts[request->value.transfer.account_id]->balance) > MAX_BALANCE) {
-                printf("The end account will have excessive amount of money allowed.\n");
                 reply->value.header.ret_code = RC_TOO_HIGH;
             }
             else {
@@ -197,7 +183,6 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
             }
         }
         else {
-            printf("Account and/or password incorrect.\n");
             reply->value.header.ret_code = RC_LOGIN_FAIL;   
         }
     }

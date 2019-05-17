@@ -14,7 +14,6 @@ struct node{
     node_t* next;       
 };
 
-
 typedef struct {
     node_t* front;      
     node_t* rear;   
