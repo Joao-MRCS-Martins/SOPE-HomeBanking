@@ -1,4 +1,3 @@
-cd ..
 ./user 0 "admiiiiiiiin" 10 0 "0 8403 top_secret" &
 ./user 0 "admiiiiiiiin" 10 0 "1 4466 top_secret" &
 ./user 0 "admiiiiiiiin" 10 0 "2 9850 top_secret" &

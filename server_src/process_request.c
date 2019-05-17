@@ -217,7 +217,7 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
 void process_request(tlv_request_t *request, tlv_reply_t *reply, int id) {
 
-    show_request(*request);
+    //show_request(*request);
     log_request(request, id); 
     
     reply->type = request->type;

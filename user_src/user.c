@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     if (mkfifo(fifo_path,RDWR_USGR)<0) {
         fail_reply(&reply,&request,RC_OTHER);
         log_reply(&reply);
-        show_reply(reply);
+        //show_reply(reply);
         return FAILURE;
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     if (rq == -1) {
         fail_reply(&reply,&request,RC_SRV_DOWN);
         log_reply(&reply);
-        show_reply(reply);
+        //show_reply(reply);
         return FAILURE;
     }
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     if ((rs=open(fifo_path,O_RDONLY|O_NONBLOCK)) == -1) {
         fail_reply(&reply,&request,RC_USR_DOWN);
         log_reply(&reply);
-        show_reply(reply);
+        //show_reply(reply);
         return FAILURE;
     }
     
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     while(difftime(time(NULL),begin) <= FIFO_TIMEOUT_SECS) {
         if(read(rs,&reply,sizeof(reply)) > 0) {
             log_reply(&reply);
-            show_reply(reply);
+            //show_reply(reply);
             timeout = false;
             break;
         }
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
         printf("Timeout on reply.\n");
         fail_reply(&reply,&request,RC_SRV_TIMEOUT);
         log_reply(&reply);
-        show_reply(reply);
+        //show_reply(reply);
         unlink(fifo_path);
 
         return FAILURE;
