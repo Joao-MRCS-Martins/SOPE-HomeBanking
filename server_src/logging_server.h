@@ -1,6 +1,7 @@
 #include "../auxiliary_code/sope.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void log_open_office(int bank_id);
 void log_close_office(int bank_id);

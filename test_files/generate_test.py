@@ -3,7 +3,7 @@ import random
 def main():
     testFile = open("test.sh",'a')
 
-    userNumber = 1000
+    userNumber = 1500
     userPass = "top_secret"
     adminPass = "admiiiiiiiin"
 
@@ -12,6 +12,7 @@ def main():
     transferRandomAccounts(testFile,userNumber,userPass)
     checkUserBalance(testFile,userNumber,userPass)
     serverShutdown(testFile,adminPass)
+    checkUserBalance(testFile,userNumber,userPass)
 
     testFile.close()
 

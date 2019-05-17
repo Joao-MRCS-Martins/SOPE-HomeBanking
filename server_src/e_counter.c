@@ -33,8 +33,8 @@ void* start_e_counter(void* args) {
     while (!( server_shutdown && empty_request_queue(request_queue) )) {
         request_queue_wait_for_request(request_queue,id,0);
 
-        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,0);
-        pthread_mutex_lock(&e_counter_lock);        
+        pthread_mutex_lock(&e_counter_lock);   
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,0);     
 
         active_e_counters++;
 
