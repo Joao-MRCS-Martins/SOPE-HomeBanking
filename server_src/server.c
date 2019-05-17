@@ -82,6 +82,7 @@ int receive_requests() {
     //receive user requests
     int rq;
     tlv_request_t request;
+    int read_status;
     memset(&request,0,sizeof(tlv_request_t));   
     
     do
@@ -90,14 +91,15 @@ int receive_requests() {
             continue;
         }
 
-        if(read(rq, &request, sizeof(request)) > 0) {
+        read_status = read(rq, &request, sizeof(request));
+        if(read_status > 0) {
             request_queue_push(request_queue,request,MAIN_THREAD_ID);
         }
 
         close(rq);
-    } while (!server_shutdown);
+    } while (!(server_shutdown && (read_status == 0)));
 
-    wait_for_e_counters();
+    wait_for_e_counters(); 
     
     return SUCCESS;
 }

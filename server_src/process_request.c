@@ -9,6 +9,7 @@ static bank_account_t* accounts[MAX_BANK_ACCOUNTS+1];
 
 static pthread_mutex_t account_lock[MAX_BANK_ACCOUNTS+1];
 
+extern int active_e_counters;
 
 void load_admin(bank_account_t *admin) {
 
@@ -48,6 +49,13 @@ void create_account(tlv_request_t *req, tlv_reply_t *rep, int id) {
     else if(checkPassword(accounts[req->value.header.account_id], req->value.header.password)){
         if(accounts[req->value.create.account_id] != 0) {
             rep->value.header.ret_code = RC_ID_IN_USE;
+
+            pthread_mutex_unlock(&account_lock[req->value.header.account_id]);
+            log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.header.account_id);
+
+            pthread_mutex_unlock(&account_lock[req->value.create.account_id]);
+            log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,req->value.create.account_id);
+
             return;
         }
         
@@ -95,7 +103,7 @@ void shutdown(tlv_request_t *request, tlv_reply_t *reply, int id) {
         log_delay(request->value.header.op_delay_ms,id);
         
         if(fchmod(rq, READ_ALL) == 0) {
-            reply->value.shutdown.active_offices = 3; // wrong value - must be active threads number
+            reply->value.shutdown.active_offices = active_e_counters;
             reply->value.header.ret_code =  RC_OK;
         } 
         else {
@@ -138,17 +146,23 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
 }
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
-    pthread_mutex_lock(&account_lock[request->value.header.account_id]);
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    if(request->value.header.account_id != request->value.transfer.account_id) {
+        pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
 
-    usleep(request->value.header.op_delay_ms*THOUSAND); 
-    log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
+        usleep(request->value.header.op_delay_ms*THOUSAND); 
+        log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
 
-    pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
-    log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+        pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
 
-    usleep(request->value.header.op_delay_ms*THOUSAND); 
-    log_sync_delay(request->value.header.op_delay_ms,request->value.transfer.account_id,id);
+        usleep(request->value.header.op_delay_ms*THOUSAND); 
+        log_sync_delay(request->value.header.op_delay_ms,request->value.transfer.account_id,id);
+    }
+    else {
+        pthread_mutex_lock(&account_lock[request->value.header.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    }
 
 
     if(accounts[request->value.header.account_id] == 0) {
@@ -187,11 +201,17 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
         }
     }
 
-    pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    if(request->value.header.account_id != request->value.transfer.account_id) {
+        pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
 
-    pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
-    log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+        pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+    }
+    else {
+        pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    }
 
 }
 

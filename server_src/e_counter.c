@@ -11,11 +11,13 @@ bool server_shutdown = false;
 
 static pthread_t e_counters[MAX_BANK_OFFICES];
 
-static pthread_mutex_t queue_lock;
+static pthread_mutex_t e_counter_lock;
+
+int active_e_counters;
 
 void init_e_counters() {
     memset(&e_counters,0,sizeof(e_counters));
-    memset(&queue_lock,0,sizeof(pthread_mutex_t));
+    memset(&e_counter_lock,0,sizeof(pthread_mutex_t));
 }
 
 void* start_e_counter(void* args) {
@@ -31,18 +33,22 @@ void* start_e_counter(void* args) {
     while (!( server_shutdown && empty_request_queue(request_queue) )) {
         request_queue_wait_for_request(request_queue,id,0);
 
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,0);
+        pthread_mutex_lock(&e_counter_lock);        
+
+        active_e_counters++;
+
         if (empty_request_queue(request_queue)) {
+            log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_PRODUCER,0);
+            pthread_mutex_unlock(&e_counter_lock);
             break;
         }
-
-        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,0);
-        pthread_mutex_lock(&queue_lock);        
 
         tlv_request_t request = get_request_queue_front(request_queue);
         request_queue_pop(request_queue,id,request.value.header.pid);
 
         log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_PRODUCER,request.value.header.pid);
-        pthread_mutex_unlock(&queue_lock);
+        pthread_mutex_unlock(&e_counter_lock);
 
         sprintf(fifo_path,"%s%d",USER_FIFO_PATH_PREFIX,request.value.header.pid);
         
@@ -73,6 +79,12 @@ void* start_e_counter(void* args) {
         if (server_shutdown && empty_request_queue(request_queue)) {
             unlock_threads(request_queue);
         }
+
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_PRODUCER,request.value.header.pid);
+        pthread_mutex_lock(&e_counter_lock);
+        active_e_counters--;
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_PRODUCER,request.value.header.pid);
+        pthread_mutex_unlock(&e_counter_lock);
     }
 
     free(args);
@@ -84,7 +96,7 @@ void* start_e_counter(void* args) {
 
 int create_e_counters(request_queue_t* request_queue, int n_threads) {
     
-    pthread_mutex_init(&queue_lock,NULL);
+    pthread_mutex_init(&e_counter_lock,NULL);
 
     for (int i = 1; i <= n_threads; i++) {
          e_counter_t* new_e_counter = malloc(sizeof(e_counter_t));
