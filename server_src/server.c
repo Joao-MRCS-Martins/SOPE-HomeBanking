@@ -87,7 +87,7 @@ int receive_requests() {
     
     do
     {
-        //verificar que o servidor nao fica preso aqui dps de shutdown ao ler os pedidos pendentes
+        
         if((rq = open(SERVER_FIFO_PATH,O_RDONLY)) == -1) {
             continue;
         }
