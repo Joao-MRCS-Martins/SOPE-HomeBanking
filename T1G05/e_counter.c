@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include "process_request.h"
 #include "request_queue.h"
-#include "../auxiliary_code/constants.h"
+#include "constants.h"
 #include "e_counter.h"
 
 bool server_shutdown = false;

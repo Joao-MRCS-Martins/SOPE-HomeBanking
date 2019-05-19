@@ -1,7 +1,7 @@
 #include "server.h"
 #include "server_parser.h"
 #include "process_request.h"
-#include "../auxiliary_code/show_info.h"
+#include "show_info.h"
 #include "request_queue.h"
 #include "e_counter.h"
 #include <time.h>

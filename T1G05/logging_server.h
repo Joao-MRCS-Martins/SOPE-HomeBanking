@@ -1,4 +1,4 @@
-#include "../auxiliary_code/sope.h"
+#include "sope.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

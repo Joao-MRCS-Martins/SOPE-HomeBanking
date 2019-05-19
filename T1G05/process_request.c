@@ -1,7 +1,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include "process_request.h"
-#include "../auxiliary_code/show_info.h"
+#include "show_info.h"
 //#include <unistd.h>
 
 

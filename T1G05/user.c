@@ -10,7 +10,7 @@
 
 #include "logging_user.h"
 #include "user_parser.h"
-#include "../auxiliary_code/show_info.h"
+#include "show_info.h"
 #include "fail_reply.h"
 
 int main(int argc, char *argv[]) {

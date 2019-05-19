@@ -1,7 +1,7 @@
 #ifndef _REQUEST_QUEUE_H_
 #define _REQUEST_QUEUE_H_
 
-#include "../auxiliary_code/types.h"
+#include "types.h"
 #include <semaphore.h>
 #include <stdbool.h>
 

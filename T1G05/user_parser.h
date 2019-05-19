@@ -1,4 +1,4 @@
-#include "../auxiliary_code/sope.h"
+#include "sope.h"
 
 int input_parser(char* args[],tlv_request_t *req);
 

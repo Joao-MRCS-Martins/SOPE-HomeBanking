@@ -1,6 +1,6 @@
 #include "request_queue.h"
 #include "logging_server.h"
-#include "../auxiliary_code/types.h"
+#include "types.h"
 #include <stdlib.h>
 
 request_queue_t* request_queue_init(int request_slots, int e_counter_id) {
