@@ -9,13 +9,9 @@ static bank_account_t* accounts[MAX_BANK_ACCOUNTS+1];
 
 static pthread_mutex_t account_lock[MAX_BANK_ACCOUNTS+1];
 
-static pthread_mutex_t double_account_lock;
-
 extern int active_e_counters;
 
 void load_admin(bank_account_t *admin) {
-    pthread_mutex_init(&double_account_lock,NULL);
-
     //inialize account_lock mutex array
     for (int i = 0; i < MAX_BANK_ACCOUNTS+1; i++) {
         pthread_mutex_init(&account_lock[i],NULL);
@@ -148,24 +144,29 @@ void balance(tlv_request_t *request, tlv_reply_t *reply, int id) {
 }
 
 void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
-    if(request->value.header.account_id != request->value.transfer.account_id) {
-        pthread_mutex_lock(&double_account_lock);
-        // log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    int id1,id2;
 
-        pthread_mutex_lock(&account_lock[request->value.header.account_id]);
-        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+    if (request->value.header.account_id < request->value.transfer.account_id) {
+        id1 = request->value.header.account_id;
+        id2 = request->value.transfer.account_id;
+    }
+    else {
+        id1 = request->value.transfer.account_id;
+        id2 = request->value.header.account_id;
+    }
+
+    if(request->value.header.account_id != request->value.transfer.account_id) {
+        pthread_mutex_lock(&account_lock[id1]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,id1);
 
         usleep(request->value.header.op_delay_ms*THOUSAND); 
-        log_sync_delay(request->value.header.op_delay_ms,request->value.header.account_id,id);
+        log_sync_delay(request->value.header.op_delay_ms,id1,id);
 
-        pthread_mutex_lock(&account_lock[request->value.transfer.account_id]);
-        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
-
-        // log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
-        pthread_mutex_unlock(&double_account_lock);
+        pthread_mutex_lock(&account_lock[id2]);
+        log_sync(id,SYNC_OP_MUTEX_LOCK,SYNC_ROLE_ACCOUNT,id2);
         
         usleep(request->value.header.op_delay_ms*THOUSAND); 
-        log_sync_delay(request->value.header.op_delay_ms,request->value.transfer.account_id,id);
+        log_sync_delay(request->value.header.op_delay_ms,id2,id);
     }
     else {
         pthread_mutex_lock(&account_lock[request->value.header.account_id]);
@@ -202,6 +203,7 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
                 accounts[request->value.header.account_id]->balance -= request->value.transfer.amount;
                 accounts[request->value.transfer.account_id]->balance += request->value.transfer.amount;
                 reply->value.transfer.balance = accounts[request->value.header.account_id]->balance;
+                reply->value.header.ret_code = RC_OK;
             }
         }
         else {
@@ -210,11 +212,11 @@ void transfer(tlv_request_t *request, tlv_reply_t *reply, int id) {
     }
 
     if(request->value.header.account_id != request->value.transfer.account_id) {
-        pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
-        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.header.account_id);
+        pthread_mutex_unlock(&account_lock[id1]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,id1);
 
-        pthread_mutex_unlock(&account_lock[request->value.transfer.account_id]);
-        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,request->value.transfer.account_id);
+        pthread_mutex_unlock(&account_lock[id2]);
+        log_sync(id,SYNC_OP_MUTEX_UNLOCK,SYNC_ROLE_ACCOUNT,id2);
     }
     else {
         pthread_mutex_unlock(&account_lock[request->value.header.account_id]);
