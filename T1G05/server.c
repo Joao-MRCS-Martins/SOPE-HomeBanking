@@ -40,7 +40,7 @@ int main (int argc, char *argv []) {
     create_e_counters(request_queue,nthr);
 
     //logBankOfficeOpen
-    log_open_office(ADMIN_ACCOUNT_ID);
+    //log_open_office(ADMIN_ACCOUNT_ID);
 
     //load admin into bank accounts
     load_admin(admin);
